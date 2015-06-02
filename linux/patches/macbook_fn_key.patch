@@ -1,0 +1,37 @@
+diff --git a/drivers/hid/hid-apple.c b/drivers/hid/hid-apple.c
+index f822fd2..5eb76c8 100644
+--- a/drivers/hid/hid-apple.c
++++ b/drivers/hid/hid-apple.c
+@@ -536,6 +536,8 @@ static const struct hid_device_id apple_devices[] = {
+ 		.driver_data = APPLE_HAS_FN | APPLE_RDESC_JIS },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_ANSI),
+ 		.driver_data = APPLE_HAS_FN },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_NEW),
++		.driver_data = APPLE_HAS_FN },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_ISO),
+ 		.driver_data = APPLE_HAS_FN | APPLE_ISO_KEYBOARD },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_JIS),
+diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
+index 56ce8c2..88409b4 100644
+--- a/drivers/hid/hid-core.c
++++ b/drivers/hid/hid-core.c
+@@ -1755,6 +1755,7 @@ static const struct hid_device_id hid_have_special_driver[] = {
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7_ISO) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7_JIS) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_ANSI) },
++	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_NEW) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_ISO) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING7A_JIS) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING8_ANSI) },
+diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
+index 7fe5590..a28a985 100644
+--- a/drivers/hid/hid-ids.h
++++ b/drivers/hid/hid-ids.h
+@@ -122,6 +122,7 @@
+ #define USB_DEVICE_ID_APPLE_WELLSPRING5A_ISO	0x0253
+ #define USB_DEVICE_ID_APPLE_WELLSPRING5A_JIS	0x0254
+ #define USB_DEVICE_ID_APPLE_WELLSPRING7A_ANSI	0x0259
++#define USB_DEVICE_ID_APPLE_WELLSPRING7A_NEW	0x0273
+ #define USB_DEVICE_ID_APPLE_WELLSPRING7A_ISO	0x025a
+ #define USB_DEVICE_ID_APPLE_WELLSPRING7A_JIS	0x025b
+ #define USB_DEVICE_ID_APPLE_WELLSPRING6A_ANSI	0x0249

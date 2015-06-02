@@ -93,19 +93,6 @@
     resolutions = [ { x = 1920; y = 1200; } ];
 };
 
-#  services.mysql = {
-#    enable = true;
-#    package = pkgs.mysql55;
-#  }; 
-
-#  services.zookeeper = {
-#    enable = true;
-#  };
-
-#  services.apache-kafka = {
-#    enable = true;
-#  };
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.jsimpson = {
     isNormalUser = true;
@@ -124,10 +111,11 @@
     packageOverrides = pkgs: rec {
       jre = pkgs.oraclejre8;
       jdk = pkgs.oraclejdk8;
-      linux_4_0 = pkgs.linux_4_0.override {
-        kernelPatches = [
+      
+      linux_4_0 = pkgs.linux_4_0.override rec {
+	kernelPatches = [
           { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
-          { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "multitouch-fix"; }
+          { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
         ];
       };
     };

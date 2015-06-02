@@ -8,8 +8,9 @@
     [ <nixpkgs/nixos/modules/installer/scan/not-detected.nix>
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_hcd" "ahci" "usbhid" "usb_storage" ];
-  boot.kernelModules = [ "kvm-intel" "bcm5974" "brcmfmac" ];
+  boot.initrd.availableKernelModules = [ "xhci_hcd" "ahci" "usbhid" "usb_storage" "hid_apple" "brcmfmac" ];
+  boot.initrd.kernelModules = [ "hid_apple" ];
+  boot.kernelModules = [ "kvm-intel" "bcm5974" "brcmfmac" "hid_apple" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =

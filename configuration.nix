@@ -18,13 +18,13 @@
   boot.initrd.kernelModules = [ "base" "udev" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
 #  boot.kernelPackages = pkgs.linuxPackages_3_19;
+  boot.kernelParams = [ "ipv6.disable=1" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 
 #  hardware.enableAllFirmware = true;
-#  hardware.firmware = [ "/firmware" ];
-  hardware.firmware = [ pkgs.firmwareLinuxNonfree ];
+#  hardware.firmware = [ "/etc/nixos/linux/firmware/brcm" ];
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -46,8 +46,11 @@
     openvpn
     openssl
     oraclejdk8
+    parted
+    pciutils
     sudo
     terminator
+    usbutils
     wget
     zsh
   ];
@@ -61,7 +64,7 @@
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
 #  services.virtualboxHost.enable = true;
-  services.hardware.pommed.enable = true;
+#  services.hardware.pommed.enable = true;
   
   # Enable the X11 windowing system.
   services.xserver = {
@@ -124,13 +127,8 @@
       linux_4_0 = pkgs.linux_4_0.override {
         kernelPatches = [
           { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
+          { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "multitouch-fix"; }
         ];
-      };
-      pommed = pkgs.pommed.override {
-        src = fetchurl {
-          url = "http://alioth.debian.org/frs/download.php/3583/pommed.tar.gz";
-          sha256 = "0mdqa9w1p6cmli6976v4wi0sw9r4p5prkj7lzfd1877wk11c9c73";
-        };
       };
     };
   };

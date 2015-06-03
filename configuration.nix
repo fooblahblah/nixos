@@ -15,7 +15,6 @@
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-  boot.initrd.kernelModules = [ "base" "udev" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
 #  boot.kernelPackages = pkgs.linuxPackages_3_19;
   boot.kernelParams = [ "ipv6.disable=1" ];
@@ -24,7 +23,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
 #  hardware.enableAllFirmware = true;
-#  hardware.firmware = [ "/etc/nixos/linux/firmware/brcm" ];
+  hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -113,6 +112,10 @@
       jdk = pkgs.oraclejdk8;
       
       linux_4_0 = pkgs.linux_4_0.override rec {
+        extraConfig = ''
+	  BRCMFMAC_USB y
+	  BRCMFMAC_PCIE y
+	'';
 	kernelPatches = [
           { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
           { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }

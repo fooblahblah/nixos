@@ -17,10 +17,13 @@
   boot.initrd.checkJournalingFS = false;
   boot.kernelPackages = pkgs.linuxPackages_latest;
 #  boot.kernelPackages = pkgs.linuxPackages_3_19;
-  boot.kernelParams = [ "ipv6.disable=1" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60"];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.extraModprobeConfig = ''
+     options hid_apple fnmode=2
+  '';
 
 #  hardware.enableAllFirmware = true;
   hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
@@ -40,7 +43,29 @@
     emacs
     gnutls
     htop
+    kde4.kdemultimedia
+    kde4.kdegraphics
+    kde4.kdeutils
+    kde4.applications
+    kde4.kdebindings
+    kde4.kdeaccessibility
+    #kde4.kde_baseapps
+    kde4.kactivities
+    kde4.kdeadmin
+    kde4.kdeartwork
+    #kde4.kde_base_artwork
+    kde4.kdenetwork
+    kde4.kdepim
+    kde4.kdepimlibs
+    kde4.kdeplasma_addons
+    kde4.kdesdk
+    #kde4.kde_wallpapers
+    kde4.kdewebdev
+    #kde4.oxygen_icons
+    kde4.kdebase_workspace
     kde4.kdelibs
+    kde4.kdevplatform
+    kde4.kopete
     nix-repl
     openvpn
     openssl
@@ -63,7 +88,6 @@
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
 #  services.virtualboxHost.enable = true;
-#  services.hardware.pommed.enable = true;
   
   # Enable the X11 windowing system.
   services.xserver = {

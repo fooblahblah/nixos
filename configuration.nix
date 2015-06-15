@@ -4,7 +4,12 @@
 
 { config, pkgs, ... }:
 
-{
+  let  linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
+                                          let linuxPackages_self = (pkgs.linuxPackagesFor (pkgs.linuxManualConfig {inherit version src configfile kernelPatches;
+                                                                                                                   allowImportFromDerivation=true;})
+		                                                    linuxPackages_self);
+  		                          in pkgs.recurseIntoAttrs linuxPackages_self;
+in { 
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -16,13 +21,28 @@
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-#  boot.kernelPackages = pkgs.linuxPackages_3_19;
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60"];
+  # boot.kernelPackages = linuxPackages_customWithPatches {
+  #   version = "4.1-rc7-custom";
+  #   src = pkgs.fetchurl {
+  #     url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.1-rc7.tar.xz";
+  #     sha256 = "4e4c3bbd301da616781d4b0c7f3c530f7ef90d5d00141296a37f276a419d7d25";
+  #   };
+  #   configfile = /etc/nixos/linux/kernel.config;
+  #   kernelPatches = [
+  #     { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
+  #     { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
+  #   ];
+  # };
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.extraModprobeConfig = ''
      options hid_apple fnmode=2
+  '';
+  boot.postBootCommands = ''
+    echo ARPT > /proc/acpi/wakeup
+    echo XHC1 > /proc/acpi/wakeup
   '';
 
 #  hardware.enableAllFirmware = true;
@@ -41,6 +61,10 @@
     cmake
     docker
     emacs
+    efivar
+    ethtool
+    firefoxWrapper
+    git
     gnutls
     htop
     kde4.kdemultimedia
@@ -72,6 +96,8 @@
     oraclejdk8
     parted
     pciutils
+    phonon_backend_vlc
+    pmutils
     sudo
     terminator
     usbutils
@@ -114,7 +140,14 @@
       Option "ModeValidation" "AllowNonEdidModes"
     '';
     resolutions = [ { x = 1920; y = 1200; } ];
-};
+  };
+
+  services.udev = {
+    extraRules = ''
+      SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{device}=="0x8c31" RUN+="/bin/sh -c '/bin/echo disabled > /sys$env{DEVPATH}/power/wakeup'"
+      SUBSYSTEM=="firmware", ACTION=="add", ATTR{loading}="-1"
+    '';
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.jsimpson = {
@@ -122,7 +155,7 @@
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" ];
     shell = "/run/current-system/sw/bin/zsh";
   };
 
@@ -130,6 +163,9 @@
     allowUnfree = true;
     chromium.enablePepperFlash = true;
     chromium.enablePepperPDF = true;
+
+    firefox.enableGoogleTalkPlugin = true;
+    firefox.enableAdobeFlash = true;
 
     packageOverrides = pkgs: rec {
       jre = pkgs.oraclejre8;

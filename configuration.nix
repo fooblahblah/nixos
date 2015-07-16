@@ -20,19 +20,19 @@ in {
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  # boot.kernelPackages = linuxPackages_customWithPatches {
-  #   version = "4.1-rc7-custom";
-  #   src = pkgs.fetchurl {
-  #     url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.1-rc7.tar.xz";
-  #     sha256 = "4e4c3bbd301da616781d4b0c7f3c530f7ef90d5d00141296a37f276a419d7d25";
-  #   };
-  #   configfile = /etc/nixos/linux/kernel.config;
-  #   kernelPatches = [
-  #     { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
-  #     { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
-  #   ];
-  # };
+#  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = linuxPackages_customWithPatches {
+    version = "4.1.2-custom";
+    src = pkgs.fetchurl {
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.1.2.tar.xz";
+      sha256 = "1mdyjhnzhh254cblahqmpsk226z006z6sm9dmwvg6jlhpsw4cjhy";
+    };
+    configfile = /etc/nixos/linux/kernel.config;
+    kernelPatches = [
+      { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
+      { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
+    ];
+  };
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
@@ -49,6 +49,7 @@ in {
   hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
 
   networking.hostName = "nixos"; # Define your hostname.
+  networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
   networking.networkmanager.enable = true;
 
   time.timeZone = "America/Denver";
@@ -57,6 +58,7 @@ in {
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     ack
+    autorandr
     chromium
     cmake
     docker
@@ -67,6 +69,7 @@ in {
     git
     gnutls
     htop
+    idea.idea-ultimate
     kde4.kdemultimedia
     kde4.kdegraphics
     kde4.kdeutils
@@ -90,18 +93,23 @@ in {
     kde4.kdelibs
     kde4.kdevplatform
     kde4.kopete
+    kde4.kmix
     nix-repl
+    nodejs
     openvpn
     openssl
     oraclejdk8
     parted
     pciutils
+    psmisc
     phonon_backend_vlc
-    pmutils
+    sbt
     sudo
     terminator
+    unzip
     usbutils
     wget
+    zip
     zsh
   ];
 
@@ -113,7 +121,7 @@ in {
   services.printing.enable = true;
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-#  services.virtualboxHost.enable = true;
+  services.mbpfan.enable = false;
   
   # Enable the X11 windowing system.
   services.xserver = {
@@ -135,6 +143,7 @@ in {
     monitorSection = ''
       Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
       Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
+      Modeline "1680x1050"  146.25  1680 1784 1960 2240  1050 1053 1059 1089 -hsync +vsync
     '';
     deviceSection = ''
       Option "ModeValidation" "AllowNonEdidModes"
@@ -146,6 +155,7 @@ in {
     extraRules = ''
       SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{device}=="0x8c31" RUN+="/bin/sh -c '/bin/echo disabled > /sys$env{DEVPATH}/power/wakeup'"
       SUBSYSTEM=="firmware", ACTION=="add", ATTR{loading}="-1"
+      SUBSYSTEM=="drm", ACTION=="change", HOTPLUG=="1", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jeff/.Xauthority", RUN+="/run/current-system/sw/bin/autorandr --change"
     '';
   };
 
@@ -181,6 +191,13 @@ in {
           { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
         ];
       };
+      
+      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : {
+	src = pkgs.fetchurl {
+	  url = "http://nodejs.org/dist/v0.12.0/node-v0.12.0.tar.gz";
+	  sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
+	};
+      });
     };
   };
 

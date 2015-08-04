@@ -21,23 +21,41 @@ in {
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
 #  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelPackages = linuxPackages_customWithPatches {
-    version = "4.1.2-custom";
-    src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.1.2.tar.xz";
-      sha256 = "1mdyjhnzhh254cblahqmpsk226z006z6sm9dmwvg6jlhpsw4cjhy";
-    };
+  boot.kernelPackages = pkgs.linuxPackages_custom {
+    version = "4.2.0-rc5";
     configfile = /etc/nixos/linux/kernel.config;
-    kernelPatches = [
-      { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
-      { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
-    ];
+    
+    src = pkgs.fetchurl {
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc5.tar.xz";
+      sha256 = "207b05ed6eedaacebedb3f4c949508ebdf40a7fcf371fb3c28188f62637923c7";
+    };
   };
+
+#  boot.kernelPackages = linuxPackages_customWithPatches {
+#    version = "4.2-rc5-custom";
+#    configfile = /etc/nixos/linux/kernel.config;
+#    
+#    src = pkgs.fetchurl {
+#      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc5.tar.xz";
+#      sha256 = "207b05ed6eedaacebedb3f4c949508ebdf40a7fcf371fb3c28188f62637923c7";
+#    };
+#    
+#    kernelPatches = [
+#      { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
+#      { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
+#    ];
+#  };
+
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.extraModprobeConfig = ''
+     alias snd-card-0 snd-hda-intel
+     alias sound-slot-0 snd-hda-intel
+     options snd_hda_intel power_save=1
+     options snd slots=snd-hda-intel,snd-usb-audio
+     options snd-hda-intel id=PCH,HDMI index=1,0
      options hid_apple fnmode=2
   '';
   boot.postBootCommands = ''
@@ -58,6 +76,8 @@ in {
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     ack
+    androidsdk_4_4
+    android-udev-rules
     autorandr
     chromium
     cmake
@@ -67,9 +87,12 @@ in {
     ethtool
     firefoxWrapper
     git
+    gnupg
     gnutls
-    htop
+    google_talk_plugin
+    htop	
     idea.idea-ultimate
+    iperf
     kde4.kdemultimedia
     kde4.kdegraphics
     kde4.kdeutils
@@ -94,18 +117,23 @@ in {
     kde4.kdevplatform
     kde4.kopete
     kde4.kmix
+    libmtp
+    mtpfs
     nix-repl
     nodejs
     openvpn
     openssl
     oraclejdk8
     parted
+    patchelf
     pciutils
     psmisc
     phonon_backend_vlc
+    python27Packages.pyserial
     sbt
     sudo
     terminator
+    unrar
     unzip
     usbutils
     wget
@@ -121,8 +149,9 @@ in {
   services.printing.enable = true;
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-  services.mbpfan.enable = false;
-  
+#  services.mbpfan.enable = false;
+#  services.virtualboxHost.enable = true;
+
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
@@ -155,17 +184,19 @@ in {
     extraRules = ''
       SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{device}=="0x8c31" RUN+="/bin/sh -c '/bin/echo disabled > /sys$env{DEVPATH}/power/wakeup'"
       SUBSYSTEM=="firmware", ACTION=="add", ATTR{loading}="-1"
-      SUBSYSTEM=="drm", ACTION=="change", HOTPLUG=="1", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jeff/.Xauthority", RUN+="/run/current-system/sw/bin/autorandr --change"
+      SUBSYSTEM=="drm", ACTION=="change", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jsimpson/.Xauthority", RUN+="/run/current-system/sw/bin/autorandr -c"
     '';
   };
 
+  users.extraGroups = { adbusers = { }; };
+  
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.jsimpson = {
     isNormalUser = true;
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" ];
     shell = "/run/current-system/sw/bin/zsh";
   };
 
@@ -177,11 +208,13 @@ in {
     firefox.enableGoogleTalkPlugin = true;
     firefox.enableAdobeFlash = true;
 
+#    virtualbox.enableExtensionPack = true;
+    
     packageOverrides = pkgs: rec {
       jre = pkgs.oraclejre8;
       jdk = pkgs.oraclejdk8;
-      
-      linux_4_0 = pkgs.linux_4_0.override rec {
+            
+      linux_4_1 = pkgs.linux_4_1.override rec {
         extraConfig = ''
 	  BRCMFMAC_USB y
 	  BRCMFMAC_PCIE y
@@ -192,12 +225,12 @@ in {
         ];
       };
       
-      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : {
-	src = pkgs.fetchurl {
-	  url = "http://nodejs.org/dist/v0.12.0/node-v0.12.0.tar.gz";
-	  sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
-	};
-      });
+#      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : {
+#	src = pkgs.fetchurl {
+#	  url = "http://nodejs.org/dist/v0.12.0/node-v0.12.0.tar.gz";
+#	  sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
+#	};
+#      });
     };
   };
 

@@ -21,32 +21,19 @@ in {
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
 #  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelPackages = pkgs.linuxPackages_custom {
-    version = "4.2.0-rc5";
+  boot.kernelPackages = linuxPackages_customWithPatches {  
+    version = "4.2.0-rc6";
     configfile = /etc/nixos/linux/kernel.config;
     
     src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc5.tar.xz";
-      sha256 = "207b05ed6eedaacebedb3f4c949508ebdf40a7fcf371fb3c28188f62637923c7";
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc6.tar.xz";
+      sha256 = "261f90b028ed8cdfba54a05a398f821d9023ad81833597180eeca8f530ca0d6e";
     };
+
+    kernelPatches = [];
   };
 
-#  boot.kernelPackages = linuxPackages_customWithPatches {
-#    version = "4.2-rc5-custom";
-#    configfile = /etc/nixos/linux/kernel.config;
-#    
-#    src = pkgs.fetchurl {
-#      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc5.tar.xz";
-#      sha256 = "207b05ed6eedaacebedb3f4c949508ebdf40a7fcf371fb3c28188f62637923c7";
-#    };
-#    
-#    kernelPatches = [
-#      { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
-#      { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
-#    ];
-#  };
-
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" "reboot=pci" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -58,17 +45,14 @@ in {
      options snd-hda-intel id=PCH,HDMI index=1,0
      options hid_apple fnmode=2
   '';
-  boot.postBootCommands = ''
-    echo ARPT > /proc/acpi/wakeup
-    echo XHC1 > /proc/acpi/wakeup
-  '';
 
-#  hardware.enableAllFirmware = true;
+  #hardware.enableAllFirmware = true;
   hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
   networking.networkmanager.enable = true;
+  networking.firewall.enable = false;
 
   time.timeZone = "America/Denver";
   
@@ -76,8 +60,8 @@ in {
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     ack
-    androidsdk_4_4
-    android-udev-rules
+#    androidsdk_4_4
+#    android-udev-rules
     autorandr
     chromium
     cmake
@@ -85,6 +69,7 @@ in {
     emacs
     efivar
     ethtool
+    file
     firefoxWrapper
     git
     gnupg
@@ -117,6 +102,7 @@ in {
     kde4.kdevplatform
     kde4.kopete
     kde4.kmix
+    kde4.konversation
     libmtp
     mtpfs
     nix-repl
@@ -148,7 +134,7 @@ in {
   services.upower.enable = true;
   services.printing.enable = true;
   services.nixosManual.showManual = true;
-  services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
+  services.logind.extraConfig = "HandleLidSwitch=no\nHandleSuspendKey=no\nHandleHibernateKey=no\nLidSwitchIgnoreInhibited=no";
 #  services.mbpfan.enable = false;
 #  services.virtualboxHost.enable = true;
 
@@ -182,14 +168,17 @@ in {
 
   services.udev = {
     extraRules = ''
-      SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{device}=="0x8c31" RUN+="/bin/sh -c '/bin/echo disabled > /sys$env{DEVPATH}/power/wakeup'"
+      # disable wake from S3 on XHC1
+      SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{power/wakeup}="disabled"
+      # disable wake from S4 on ARPT
+      SUBSYSTEM=="pci", KERNEL=="0000:03:00.0", ATTR{power/wakeup}="disabled"
       SUBSYSTEM=="firmware", ACTION=="add", ATTR{loading}="-1"
       SUBSYSTEM=="drm", ACTION=="change", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jsimpson/.Xauthority", RUN+="/run/current-system/sw/bin/autorandr -c"
     '';
   };
 
   users.extraGroups = { adbusers = { }; };
-  
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.jsimpson = {
     isNormalUser = true;
@@ -209,11 +198,18 @@ in {
     firefox.enableAdobeFlash = true;
 
 #    virtualbox.enableExtensionPack = true;
-    
+
     packageOverrides = pkgs: rec {
       jre = pkgs.oraclejre8;
       jdk = pkgs.oraclejdk8;
-            
+
+      idea.idea-ultimate = pkgs.idea.idea-ultimate.override rec {
+        src = pkgs.fetchurl {
+          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.4.tar.gz";
+          sha256 = "1hxs0mh35r43iqd1i1s2g1ha91q2wnb6xs95w572khzjm5dznvaw";
+        };
+      };
+
       linux_4_1 = pkgs.linux_4_1.override rec {
         extraConfig = ''
 	  BRCMFMAC_USB y
@@ -223,13 +219,23 @@ in {
           { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
           { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
         ];
+        src = pkgs.fetchurl {
+          url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc6.tar.xz";
+          sha256 = "261f90b028ed8cdfba54a05a398f821d9023ad81833597180eeca8f530ca0d6e";
+        };
       };
+
+#      kde4.kdm = pkgs.stdenv.lib.overrideDerivation pkgs.kdm (oldAttrs : {
+#        defaultConfig = ''
+#	'';
+#      });
       
-#      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : {
-#	src = pkgs.fetchurl {
-#	  url = "http://nodejs.org/dist/v0.12.0/node-v0.12.0.tar.gz";
-#	  sha256 = "0cifd2qhpyrbxx71a4hsagzk24qas8m5zvwcyhx69cz9yhxf404p";
-#	};
+#      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : rec {
+#         version = "0.12.7";
+#  	 src = pkgs.fetchurl {
+#           url = "http://nodejs.org/dist/v${version}/node-v${version}.tar.gz";
+#           sha256 = "17gk29zbw58l0sjjfw86acp39pkiblnq0gsq1jdrd70w0pgn8gdj";
+#	 };
 #      });
     };
   };

@@ -22,18 +22,18 @@ in {
   boot.initrd.checkJournalingFS = false;
 #  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelPackages = linuxPackages_customWithPatches {  
-    version = "4.2.0-rc6";
+    version = "4.2.0";
     configfile = /etc/nixos/linux/kernel.config;
     
     src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc6.tar.xz";
-      sha256 = "261f90b028ed8cdfba54a05a398f821d9023ad81833597180eeca8f530ca0d6e";
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.tar.xz";
+      sha256 = "cf20e044f17588d2a42c8f2a450b0fd84dfdbd579b489d93e9ab7d0e8b45dbeb";
     };
 
     kernelPatches = [];
   };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" "reboot=pci" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -46,8 +46,8 @@ in {
      options hid_apple fnmode=2
   '';
 
-  #hardware.enableAllFirmware = true;
-  hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
+  hardware.enableAllFirmware = true;
+#  hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
@@ -57,13 +57,13 @@ in {
   time.timeZone = "America/Denver";
   
   # List packages installed in system profile. To search by name, run:
-  # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     ack
 #    androidsdk_4_4
 #    android-udev-rules
     autorandr
     chromium
+    clementine
     cmake
     docker
     emacs
@@ -75,6 +75,8 @@ in {
     gnupg
     gnutls
     google_talk_plugin
+    gstreamer
+    hipchat
     htop	
     idea.idea-ultimate
     iperf
@@ -104,9 +106,13 @@ in {
     kde4.kmix
     kde4.konversation
     libmtp
+    libcanberra_kde
+    lshw
+    mplayer
     mtpfs
     nix-repl
     nodejs
+    nox
     openvpn
     openssl
     oraclejdk8
@@ -117,11 +123,16 @@ in {
     phonon_backend_vlc
     python27Packages.pyserial
     sbt
+    skype
+    spotify
     sudo
     terminator
+    tig       
+    tree	      
     unrar
     unzip
     usbutils
+    vlc
     wget
     zip
     zsh
@@ -137,6 +148,8 @@ in {
   services.logind.extraConfig = "HandleLidSwitch=no\nHandleSuspendKey=no\nHandleHibernateKey=no\nLidSwitchIgnoreInhibited=no";
 #  services.mbpfan.enable = false;
 #  services.virtualboxHost.enable = true;
+
+#  virtualisation.docker.enable = true;
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -185,7 +198,7 @@ in {
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" ];
     shell = "/run/current-system/sw/bin/zsh";
   };
 
@@ -225,11 +238,6 @@ in {
         };
       };
 
-#      kde4.kdm = pkgs.stdenv.lib.overrideDerivation pkgs.kdm (oldAttrs : {
-#        defaultConfig = ''
-#	'';
-#      });
-      
 #      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : rec {
 #         version = "0.12.7";
 #  	 src = pkgs.fetchurl {

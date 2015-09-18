@@ -4,16 +4,26 @@
 
 { config, pkgs, ... }:
 
-  let  linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
-                                          let linuxPackages_self = (pkgs.linuxPackagesFor (pkgs.linuxManualConfig {inherit version src configfile kernelPatches;
-                                                                                                                   allowImportFromDerivation=true;})
-		                                                    linuxPackages_self);
+  let manualConfig = import ./manual-config.nix;
+
+      linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
+                                         let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig {
+					                                                                inherit version src configfile kernelPatches;
+					                                                                allowImportFromDerivation=true;})
+	                                                           linuxPackages_self);
   		                          in pkgs.recurseIntoAttrs linuxPackages_self;
+      linuxManualConfig = buildLinux;
+      buildLinux = manualConfig {
+        inherit (pkgs) stdenv runCommand nettools bc perl kmod writeTextFile ubootChooser openssl;
+      };
+
+				  
 in { 
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
+
 
   nix.binaryCaches = [ http://cache.nixos.org http://hydra.nixos.org ];
 
@@ -21,17 +31,28 @@ in {
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
 #  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelPackages = linuxPackages_customWithPatches {  
-    version = "4.2.0";
+#  boot.kernelPackages = linuxPackages_customWithPatches {  
+#    version = "4.2.0";
+#    configfile = /etc/nixos/linux/kernel.config;
+#    
+#    src = pkgs.fetchurl {
+#      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.tar.xz";
+#      sha256 = "cf20e044f17588d2a42c8f2a450b0fd84dfdbd579b489d93e9ab7d0e8b45dbeb";
+#    };
+#
+#    kernelPatches = [];
+#  };
+  boot.kernelPackages = linuxPackages_customWithPatches {
+    version = "4.3.0-rc1";
     configfile = /etc/nixos/linux/kernel.config;
     
     src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.tar.xz";
-      sha256 = "cf20e044f17588d2a42c8f2a450b0fd84dfdbd579b489d93e9ab7d0e8b45dbeb";
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc1.tar.xz";
+      sha256 = "781ae85993ee8a08fae6388d92225c7f07371f7ea06f01b69246dd1a32c61993";
     };
 
     kernelPatches = [];
-  };
+};
 
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
   boot.loader.gummiboot.enable = true;
@@ -71,6 +92,7 @@ in {
     ethtool
     file
     firefoxWrapper
+    gimp
     git
     gnupg
     gnutls
@@ -137,6 +159,8 @@ in {
     zip
     zsh
   ];
+  ## KDE 5
+  ##++ builtins.filter stdenv.lib.isDerivation (builtins.attrValues kdeApps_stable);
 
   # List services that you want to enable:
 
@@ -145,7 +169,7 @@ in {
   services.upower.enable = true;
   services.printing.enable = true;
   services.nixosManual.showManual = true;
-  services.logind.extraConfig = "HandleLidSwitch=no\nHandleSuspendKey=no\nHandleHibernateKey=no\nLidSwitchIgnoreInhibited=no";
+  services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
 #  services.mbpfan.enable = false;
 #  services.virtualboxHost.enable = true;
 
@@ -158,7 +182,7 @@ in {
     layout = "us";
 
     # Enable the KDE Desktop Environment.
-    displayManager.kdm.enable = true;
+    displayManager.sddm.enable = true;
     desktopManager.kde4.enable = true;
 
     synaptics.enable = true;
@@ -222,29 +246,6 @@ in {
           sha256 = "1hxs0mh35r43iqd1i1s2g1ha91q2wnb6xs95w572khzjm5dznvaw";
         };
       };
-
-      linux_4_1 = pkgs.linux_4_1.override rec {
-        extraConfig = ''
-	  BRCMFMAC_USB y
-	  BRCMFMAC_PCIE y
-	'';
-	kernelPatches = [
-          { patch = /etc/nixos/linux/patches/bcm5974.patch; name = "multitouch-fix"; }
-          { patch = /etc/nixos/linux/patches/macbook_fn_key.patch; name = "key-patch-fix"; }
-        ];
-        src = pkgs.fetchurl {
-          url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.2-rc6.tar.xz";
-          sha256 = "261f90b028ed8cdfba54a05a398f821d9023ad81833597180eeca8f530ca0d6e";
-        };
-      };
-
-#      nodejs = pkgs.stdenv.lib.overrideDerivation pkgs.nodejs (oldAttrs : rec {
-#         version = "0.12.7";
-#  	 src = pkgs.fetchurl {
-#           url = "http://nodejs.org/dist/v${version}/node-v${version}.tar.gz";
-#           sha256 = "17gk29zbw58l0sjjfw86acp39pkiblnq0gsq1jdrd70w0pgn8gdj";
-#	 };
-#      });
     };
   };
 

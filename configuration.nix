@@ -43,18 +43,18 @@ in {
 #    kernelPatches = [];
 #  };
   boot.kernelPackages = linuxPackages_customWithPatches {
-    version = "4.3.0-rc1";
+    version = "4.3.0-rc6";
     configfile = /etc/nixos/linux/kernel.config;
     
     src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc1.tar.xz";
-      sha256 = "781ae85993ee8a08fae6388d92225c7f07371f7ea06f01b69246dd1a32c61993";
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc6.tar.xz";
+      sha256 = "fbf68fe15dfa71c0bd18a067db57ddbc40b12440602df4d1cb4aee26f1a02ea2";
     };
 
     kernelPatches = [];
 };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "resume=/dev/sda4" "resume_offset=2357248" "libata.force=noncq" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -68,7 +68,6 @@ in {
   '';
 
   hardware.enableAllFirmware = true;
-#  hardware.firmware = [ /etc/nixos/linux/linux-firmware ];
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
@@ -86,6 +85,8 @@ in {
     chromium
     clementine
     cmake
+    clojure
+    dmidecode
     docker
     emacs
     efivar
@@ -101,6 +102,7 @@ in {
     hipchat
     htop	
     idea.idea-ultimate
+    inetutils
     iperf
     kde4.kdemultimedia
     kde4.kdegraphics
@@ -127,11 +129,15 @@ in {
     kde4.kopete
     kde4.kmix
     kde4.konversation
+    kde4.okular
     libmtp
     libcanberra_kde
     lshw
+    lsof
+    maven
     mplayer
     mtpfs
+    ncdu
     nix-repl
     nodejs
     nox
@@ -141,12 +147,14 @@ in {
     parted
     patchelf
     pciutils
+    pmtools
     psmisc
     phonon_backend_vlc
     python27Packages.pyserial
     sbt
     skype
     spotify
+    strategoPackages.strategoxt
     sudo
     terminator
     tig       
@@ -242,10 +250,19 @@ in {
 
       idea.idea-ultimate = pkgs.idea.idea-ultimate.override rec {
         src = pkgs.fetchurl {
-          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.4.tar.gz";
-          sha256 = "1hxs0mh35r43iqd1i1s2g1ha91q2wnb6xs95w572khzjm5dznvaw";
+          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.5.tar.gz";
+          sha256 = "6912902ec97a57f5553247367d6dd5b8e3041e99faf32c48b672cd31413dab73";
         };
       };
+
+      firmwareLinuxNonfree = pkgs.stdenv.lib.overrideDerivation pkgs.firmwareLinuxNonfree (oldAttrs: {
+        src = pkgs.fetchFromGitHub {
+          owner = "fooblahblah";
+          repo = "linux-firmware";
+    	   rev = "57d7e456ee321e369516cfc50f2e72e4069758e5";
+	   sha256 = "1yz72dss5wcibvabfc2p3nc6gkawcnwwnnh0qgvz0zmzy370di9r";
+        };
+      });
     };
   };
 

@@ -30,21 +30,21 @@ in {
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-#  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  boot.kernelPackages = linuxPackages_customWithPatches {
-    version = "4.3.0-rc6";
-    configfile = /etc/nixos/linux/kernel.config;
+  # boot.kernelPackages = linuxPackages_customWithPatches {
+  #   version = "4.3.0-rc6";
+  #   configfile = /etc/nixos/linux/kernel.config;
     
-    src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc6.tar.xz";
-      sha256 = "fbf68fe15dfa71c0bd18a067db57ddbc40b12440602df4d1cb4aee26f1a02ea2";
-    };
+  #   src = pkgs.fetchurl {
+  #     url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc6.tar.xz";
+  #     sha256 = "fbf68fe15dfa71c0bd18a067db57ddbc40b12440602df4d1cb4aee26f1a02ea2";
+  #   };
 
-    kernelPatches = [];
-};
+  #   kernelPatches = [];
+  # };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP1:1920x1200@60" "acpibacklight=vendor" "reboot=efi" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "acpibacklight=vendor" "reboot=efi" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;

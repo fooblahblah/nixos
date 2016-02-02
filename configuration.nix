@@ -6,17 +6,16 @@
 
   let manualConfig = import ./manual-config.nix;
 
-      linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
-                                         let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig {
-					                                                                inherit version src configfile kernelPatches;
-					                                                                allowImportFromDerivation=true;})
-	                                                           linuxPackages_self);
-  		                          in pkgs.recurseIntoAttrs linuxPackages_self;
+  linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
+    let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig {
+      inherit version src configfile kernelPatches;
+      allowImportFromDerivation=true;})
+      linuxPackages_self);
+    in pkgs.recurseIntoAttrs linuxPackages_self;
       linuxManualConfig = buildLinux;
       buildLinux = manualConfig {
         inherit (pkgs) stdenv runCommand nettools bc perl kmod writeTextFile ubootChooser openssl;
       };
-
 				  
 in { 
   imports =
@@ -30,31 +29,30 @@ in {
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-#  boot.kernelPackages = pkgs.linuxPackages_latest;
-#  boot.kernelPackages = linuxPackages_customWithPatches {  
-#    version = "4.2.0";
-#    configfile = /etc/nixos/linux/kernel.config;
-#    
-#    src = pkgs.fetchurl {
-#      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.tar.xz";
-#      sha256 = "cf20e044f17588d2a42c8f2a450b0fd84dfdbd579b489d93e9ab7d0e8b45dbeb";
-#    };
-#
-#    kernelPatches = [];
-#  };
-  boot.kernelPackages = linuxPackages_customWithPatches {
-    version = "4.3.0-rc6";
-    configfile = /etc/nixos/linux/kernel.config;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # boot.kernelPackages = linuxPackages_customWithPatches {
+  #   configfile = /etc/nixos/linux/kernel.config;
     
-    src = pkgs.fetchurl {
-      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc6.tar.xz";
-      sha256 = "fbf68fe15dfa71c0bd18a067db57ddbc40b12440602df4d1cb4aee26f1a02ea2";
-    };
+  #   version = "4.5.0-rc2";
+  #   src = pkgs.fetchurl {
+  #     url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.5-rc2.tar.xz";
+  #     sha256 = "232f520fb40efa868b537b963a0e69bab0c97b2c29d798f3a987ee57a30d06db";
+  #   };
 
-    kernelPatches = [];
-};
+  #   # version = "4.4.0-rc1-next-20151120";
+  #   # src = pkgs.fetchgit {
+  #   #   url    = git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git;
+  #   #   rev    = "a78de01cfa6e8c9b6ba8d1479fed4984334e2cda";
+  #   #   sha256 = "1cg9yndjwr88wirkga5hidmblyp8jaswprsri8zlawmbd6kkhcvs";
+  #   # };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" ];
+  #   kernelPatches = [
+  #   ];
+  # };
+
+  # "initcall_debug" 
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "no_console_suspend" "ignore_loglevel" ''dyndbg="file suspend.c +p"'' "reboot=pci" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -68,6 +66,7 @@ in {
   '';
 
   hardware.enableAllFirmware = true;
+  hardware.pulseaudio.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
@@ -81,13 +80,16 @@ in {
     ack
 #    androidsdk_4_4
 #    android-udev-rules
+    atom 
     autorandr
+    bind
     chromium
     clementine
     cmake
     clojure
     dmidecode
     docker
+    dpkg
     emacs
     efivar
     ethtool
@@ -99,30 +101,27 @@ in {
     gnutls
     google_talk_plugin
     gstreamer
-    hipchat
+#    hipchat
     htop	
     idea.idea-ultimate
     inetutils
     iperf
+    iptables
     kde4.kdemultimedia
     kde4.kdegraphics
     kde4.kdeutils
     kde4.applications
     kde4.kdebindings
     kde4.kdeaccessibility
-    #kde4.kde_baseapps
     kde4.kactivities
     kde4.kdeadmin
     kde4.kdeartwork
-    #kde4.kde_base_artwork
     kde4.kdenetwork
     kde4.kdepim
     kde4.kdepimlibs
     kde4.kdeplasma_addons
     kde4.kdesdk
-    #kde4.kde_wallpapers
     kde4.kdewebdev
-    #kde4.oxygen_icons
     kde4.kdebase_workspace
     kde4.kdelibs
     kde4.kdevplatform
@@ -130,8 +129,10 @@ in {
     kde4.kmix
     kde4.konversation
     kde4.okular
+    kde4.ffmpegthumbs
     libmtp
     libcanberra_kde
+    libxml2
     lshw
     lsof
     maven
@@ -139,6 +140,7 @@ in {
     mtpfs
     ncdu
     nix-repl
+    ngrok
     nodejs
     nox
     openvpn
@@ -146,11 +148,13 @@ in {
     oraclejdk8
     parted
     patchelf
+    pavucontrol
     pciutils
     pmtools
     psmisc
     phonon_backend_vlc
     python27Packages.pyserial
+    rpm
     sbt
     skype
     spotify
@@ -181,7 +185,7 @@ in {
 #  services.mbpfan.enable = false;
 #  services.virtualboxHost.enable = true;
 
-#  virtualisation.docker.enable = true;
+  virtualisation.docker.enable = true;
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -250,19 +254,19 @@ in {
 
       idea.idea-ultimate = pkgs.idea.idea-ultimate.override rec {
         src = pkgs.fetchurl {
-          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.5.tar.gz";
-          sha256 = "6912902ec97a57f5553247367d6dd5b8e3041e99faf32c48b672cd31413dab73";
+          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.6.tar.gz";
+          sha256 = "256afe4508fe24fef0699cd4ed44fb250ea703de804ffac381e22bac628f2c6f";
         };
       };
 
-      firmwareLinuxNonfree = pkgs.stdenv.lib.overrideDerivation pkgs.firmwareLinuxNonfree (oldAttrs: {
-        src = pkgs.fetchFromGitHub {
-          owner = "fooblahblah";
-          repo = "linux-firmware";
-    	   rev = "57d7e456ee321e369516cfc50f2e72e4069758e5";
-	   sha256 = "1yz72dss5wcibvabfc2p3nc6gkawcnwwnnh0qgvz0zmzy370di9r";
-        };
-      });
+#      firmwareLinuxNonfree = pkgs.stdenv.lib.overrideDerivation pkgs.firmwareLinuxNonfree (oldAttrs: {
+#        src = pkgs.fetchFromGitHub {
+#          owner = "fooblahblah";
+#          repo = "linux-firmware";
+#    	   rev = "57d7e456ee321e369516cfc50f2e72e4069758e5";
+#	   sha256 = "1yz72dss5wcibvabfc2p3nc6gkawcnwwnnh0qgvz0zmzy370di9r";
+#        };
+#      });
     };
   };
 

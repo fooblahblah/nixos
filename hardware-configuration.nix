@@ -12,7 +12,7 @@
   boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" ];
   boot.kernelModules = [ "kvm-intel" "bcm5974" "brcmfmac" "hid_apple" ];
   boot.extraModulePackages = [ ];
-  boot.blacklistedKernelModules = [ "bluetooth" "btusb" "bdc_pci" ];
+  boot.blacklistedKernelModules = [ "bluetooth" "btusb" "bdc_pci" "ghash_clmulni_intel" ];
 
   fileSystems."/" =
     { device  = "/dev/disk/by-uuid/f3758d53-2e42-49b1-acd8-88a42d0fa66a";

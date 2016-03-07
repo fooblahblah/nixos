@@ -4,8 +4,9 @@
 
 { config, pkgs, ... }:
 
+  #### Use this bit to be able to add patches to a manual build
   let manualConfig = import ./manual-config.nix;
-
+  
   linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
     let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig {
       inherit version src configfile kernelPatches;
@@ -29,30 +30,30 @@ in {
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # boot.kernelPackages = linuxPackages_customWithPatches {
-  #   configfile = /etc/nixos/linux/kernel.config;
+  boot.kernelPackages = pkgs.linuxPackages_custom {
+    configfile = /etc/nixos/linux/kernel.config;
     
-  #   version = "4.5.0-rc2";
-  #   src = pkgs.fetchurl {
-  #     url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.5-rc2.tar.xz";
-  #     sha256 = "232f520fb40efa868b537b963a0e69bab0c97b2c29d798f3a987ee57a30d06db";
-  #   };
+    version = "4.5.0-rc7";
+    src = pkgs.fetchurl {
+      url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.5-rc7.tar.xz";
+      sha256 = "7812f21b12eab15b6b2e5fff2d1f157daea17fdc52db48f68bb8cec8d8d1837c";
+    };
 
-  #   # version = "4.4.0-rc1-next-20151120";
-  #   # src = pkgs.fetchgit {
-  #   #   url    = git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git;
-  #   #   rev    = "a78de01cfa6e8c9b6ba8d1479fed4984334e2cda";
-  #   #   sha256 = "1cg9yndjwr88wirkga5hidmblyp8jaswprsri8zlawmbd6kkhcvs";
-  #   # };
+    # version = "4.4.0-rc1-next-20151120";
+    # src = pkgs.fetchgit {
+    #   url    = git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git;
+    #   rev    = "a78de01cfa6e8c9b6ba8d1479fed4984334e2cda";
+    #   sha256 = "1cg9yndjwr88wirkga5hidmblyp8jaswprsri8zlawmbd6kkhcvs";
+    # };
 
-  #   kernelPatches = [
-  #   ];
-  # };
+    # kernelPatches = [
+    # ];
+  };
 
   # "initcall_debug" 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "no_console_suspend" "ignore_loglevel" ''dyndbg="file suspend.c +p"'' "reboot=pci" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" "no_console_suspend" "ignore_loglevel" ''dyndbg="file suspend.c +p"'' "reboot=pci" "iommu=force" "intel_iommu=on" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -67,6 +68,7 @@ in {
 
   hardware.enableAllFirmware = true;
   hardware.pulseaudio.enable = true;
+  #hardware.facetimehd.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
@@ -141,7 +143,6 @@ in {
     ncdu
     nix-repl
     ngrok
-    nodejs
     nox
     openvpn
     openssl
@@ -168,6 +169,7 @@ in {
     usbutils
     vlc
     wget
+    which
     zip
     zsh
   ];

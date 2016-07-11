@@ -9,32 +9,32 @@
     ];
 
   boot.initrd.availableKernelModules = [ "xhci_hcd" "ahci" "usbhid" "usb_storage" ];
-  boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" "nvme" ];
-  boot.kernelModules = [ "kvm-intel" "nvme" ];
+  boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" ];
+  boot.kernelModules = [ "kvm-intel" "bcm5974" "brcmfmac" "hid_apple" ];
   boot.extraModulePackages = [ ];
-  boot.blacklistedKernelModules = [ "psmouse" ];
+  boot.blacklistedKernelModules = [ "bluetooth" "btusb" "bdc_pci" ];
 
   fileSystems."/" =
-    { device  = "/dev/disk/by-label/nixos";
-      fsType  = "btrfs";
-      options = "noatime,discard,ssd,compress=lzo,space_cache";
+    { device  = "/dev/disk/by-uuid/f3758d53-2e42-49b1-acd8-88a42d0fa66a";
+      fsType  = "ext4";
+      options = "defaults,noatime,discard";
       noCheck = true;
     };
 
   fileSystems."/boot" =
-    { device = "/dev/nvme0n1p1";
+    { device = "/dev/disk/by-uuid/67E3-17ED";
       fsType = "vfat";
     };
 
   swapDevices = [
-   { device = "/dev/disk/by-label/swap";
-     size = 32768; # in MB
+   { device = "/var/swapfile";
+     size = 16384; # in MB
    }
   ];
   
-  nix.maxJobs = 4;
+  nix.maxJobs = 8;
   nix.extraOptions = ''
-    build-cores = 4
+    build-cores = 8
   '';
 
 }

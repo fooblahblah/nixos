@@ -4,20 +4,21 @@
 
 { config, pkgs, ... }:
 
-  #### Use this bit to be able to add patches to a manual build
   let manualConfig = import ./manual-config.nix;
 
-  linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
-    let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig { inherit version src configfile kernelPatches;
-									 allowImportFromDerivation=true;})
-						     linuxPackages_self);
-			      in pkgs.recurseIntoAttrs linuxPackages_self;
-       linuxManualConfig = buildLinux;
-       buildLinux = manualConfig {
-	 inherit (pkgs) stdenv runCommand nettools bc perl kmod writeTextFile ubootChooser openssl;
-       };
+      linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
+                                         let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig {
+					                                                                inherit version src configfile kernelPatches;
+					                                                                allowImportFromDerivation=true;})
+	                                                           linuxPackages_self);
+  		                          in pkgs.recurseIntoAttrs linuxPackages_self;
+      linuxManualConfig = buildLinux;
+      buildLinux = manualConfig {
+        inherit (pkgs) stdenv runCommand nettools bc perl kmod writeTextFile ubootChooser openssl;
+      };
 
-in {
+				  
+in { 
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -30,37 +31,43 @@ in {
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
 #  boot.kernelPackages = pkgs.linuxPackages_latest;
-
+#  boot.kernelPackages = linuxPackages_customWithPatches {  
+#    version = "4.2.0";
+#    configfile = /etc/nixos/linux/kernel.config;
+#    
+#    src = pkgs.fetchurl {
+#      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.2.tar.xz";
+#      sha256 = "cf20e044f17588d2a42c8f2a450b0fd84dfdbd579b489d93e9ab7d0e8b45dbeb";
+#    };
+#
+#    kernelPatches = [];
+#  };
   boot.kernelPackages = linuxPackages_customWithPatches {
+    version = "4.3.0-rc6";
     configfile = /etc/nixos/linux/kernel.config;
+    
+    src = pkgs.fetchurl {
+      url    = "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.3-rc6.tar.xz";
+      sha256 = "fbf68fe15dfa71c0bd18a067db57ddbc40b12440602df4d1cb4aee26f1a02ea2";
+    };
 
-     # version = "4.6.0";
+    kernelPatches = [];
+};
 
-     # src = pkgs.fetchurl {
-     #   url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz";
-     #   sha256 = "a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866";
-     # };
-
-     version = "4.7.0-rc6";
-
-     src = pkgs.fetchurl {
-       url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.7-rc6.tar.xz";
-       sha256 = "194da8f333b71f0ae654e10d7874a079b78249425899ee7321b7ddd94d4591ce";
-     };
-
-     kernelPatches = [
-     ];
-  };
-
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1536x864@60" ];
-
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1920x1200@60" ];
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
-
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.extraModprobeConfig = ''
+     alias snd-card-0 snd-hda-intel
+     alias sound-slot-0 snd-hda-intel
+     options snd_hda_intel power_save=1
+     options snd slots=snd-hda-intel,snd-usb-audio
+     options snd-hda-intel id=PCH,HDMI index=1,0
+     options hid_apple fnmode=2
+  '';
 
   hardware.enableAllFirmware = true;
-  hardware.pulseaudio.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
   networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
@@ -68,19 +75,19 @@ in {
   networking.firewall.enable = false;
 
   time.timeZone = "America/Denver";
-
+  
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-    atom
+#    androidsdk_4_4
+#    android-udev-rules
     autorandr
-    bind
-#    chromium
+    chromium
     clementine
     cmake
+    clojure
     dmidecode
     docker
-    dpkg
     emacs
     efivar
     ethtool
@@ -90,43 +97,41 @@ in {
     git
     gnupg
     gnutls
-    google-chrome
     google_talk_plugin
     gstreamer
-#    hipchat
-    htop
+    hipchat
+    htop	
     idea.idea-ultimate
     inetutils
     iperf
-    iptables
     kde4.kdemultimedia
     kde4.kdegraphics
     kde4.kdeutils
     kde4.applications
     kde4.kdebindings
     kde4.kdeaccessibility
+    #kde4.kde_baseapps
     kde4.kactivities
     kde4.kdeadmin
     kde4.kdeartwork
+    #kde4.kde_base_artwork
     kde4.kdenetwork
     kde4.kdepim
     kde4.kdepimlibs
     kde4.kdeplasma_addons
     kde4.kdesdk
+    #kde4.kde_wallpapers
     kde4.kdewebdev
+    #kde4.oxygen_icons
     kde4.kdebase_workspace
     kde4.kdelibs
     kde4.kdevplatform
     kde4.kopete
     kde4.kmix
     kde4.konversation
-    kde4.choqok
     kde4.okular
-    kde4.ffmpegthumbs
-    kde4.yakuake
     libmtp
     libcanberra_kde
-    libxml2
     lshw
     lsof
     maven
@@ -134,37 +139,31 @@ in {
     mtpfs
     ncdu
     nix-repl
-    ngrok
+    nodejs
     nox
     openvpn
     openssl
     oraclejdk8
     parted
     patchelf
-    pavucontrol
     pciutils
     pmtools
-    powertop
     psmisc
-    phonon_backend_gstreamer
+    phonon_backend_vlc
     python27Packages.pyserial
-    rpm
     sbt
+    skype
     spotify
+    strategoPackages.strategoxt
     sudo
     terminator
-    tig
-    tmux
-    tree
+    tig       
+    tree	      
     unrar
     unzip
     usbutils
     vlc
     wget
-    which
-    xclip
-    xflux
-    xorg.xbacklight
     zip
     zsh
   ];
@@ -174,62 +173,52 @@ in {
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  services.dnsmasq.enable = true;
   services.openssh.enable = true;
   services.upower.enable = true;
-  services.tlp.enable = true;
-  services.tlp.extraConfig = ''
-    SATA_LINKPWR_ON_BAT=max_performance
-  '';
   services.printing.enable = true;
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
+#  services.mbpfan.enable = false;
 #  services.virtualboxHost.enable = true;
 
-  virtualisation.docker.enable = true;
+#  virtualisation.docker.enable = true;
 
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-
+    
     layout = "us";
 
     # Enable the KDE Desktop Environment.
     displayManager.sddm.enable = true;
     desktopManager.kde4.enable = true;
 
-    libinput.enable        = true;
-    libinput.tapping       = false;
-    libinput.clickMethod   = "clickfinger";
-
-    # synaptics.enable = true;
-    # synaptics.buttonsMap = [ 1 3 2];
-    # synaptics.fingersMap = [ 0 0 0 ];
-    # synaptics.tapButtons = true;
-    # synaptics.twoFingerScroll = true;
-    # synaptics.vertEdgeScroll = false;
-    # synaptics.maxSpeed = "10.0";
-    # synaptics.accelFactor = "0.080";
+    synaptics.enable = true;
+    synaptics.buttonsMap = [ 1 3 2];
+    synaptics.fingersMap = [ 0 0 0 ];
+    synaptics.tapButtons = true;
+    synaptics.twoFingerScroll = true;
+    synaptics.vertEdgeScroll = false;
 
     monitorSection = ''
       Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
       Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
       Modeline "1680x1050"  146.25  1680 1784 1960 2240  1050 1053 1059 1089 -hsync +vsync
-      Modeline "1440x810"   95.00   1440 1520 1664 1888  810  813  818  841  -hsync +vsync
-      Modeline "1792x1008"  149.50  1792 1904 2088 2384  1008 1011 1016 1046 -hsync +vsync
-      Modeline "1664x936"   128.50  1664 1768 1936 2208  936  939  944  972  -hsync +vsync
-      Modeline "1536x864"   109.25  1536 1624 1784 2032  864  867  872  897  -hsync +vsync
     '';
     deviceSection = ''
       Option "ModeValidation" "AllowNonEdidModes"
     '';
-    inputClassSections = [
-    ];
-    resolutions = [ { x = 1536; y = 864; } ];
+    resolutions = [ { x = 1920; y = 1200; } ];
   };
 
   services.udev = {
     extraRules = ''
+      # disable wake from S3 on XHC1
+      SUBSYSTEM=="pci", KERNEL=="0000:00:14.0", ATTR{power/wakeup}="disabled"
+      # disable wake from S4 on ARPT
+      SUBSYSTEM=="pci", KERNEL=="0000:03:00.0", ATTR{power/wakeup}="disabled"
+      SUBSYSTEM=="firmware", ACTION=="add", ATTR{loading}="-1"
+      SUBSYSTEM=="drm", ACTION=="change", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jsimpson/.Xauthority", RUN+="/run/current-system/sw/bin/autorandr -c"
     '';
   };
 
@@ -246,7 +235,6 @@ in {
   };
 
   nixpkgs.config = {
-    allowBroken = false;
     allowUnfree = true;
     chromium.enablePepperFlash = true;
     chromium.enablePepperPDF = true;
@@ -260,11 +248,20 @@ in {
       jre = pkgs.oraclejre8;
       jdk = pkgs.oraclejdk8;
 
-      idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
-	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.1.1.tar.gz";
-	  sha256 = "d5a7d2d657fe2ad170716054c6ccd164e509cf50ee6eee8b61fe3490071940df";
-	};
+      idea.idea-ultimate = pkgs.idea.idea-ultimate.override rec {
+        src = pkgs.fetchurl {
+          url    = "https://download.jetbrains.com/idea/ideaIU-14.1.5.tar.gz";
+          sha256 = "6912902ec97a57f5553247367d6dd5b8e3041e99faf32c48b672cd31413dab73";
+        };
+      };
+
+      firmwareLinuxNonfree = pkgs.stdenv.lib.overrideDerivation pkgs.firmwareLinuxNonfree (oldAttrs: {
+        src = pkgs.fetchFromGitHub {
+          owner = "fooblahblah";
+          repo = "linux-firmware";
+    	   rev = "57d7e456ee321e369516cfc50f2e72e4069758e5";
+	   sha256 = "1yz72dss5wcibvabfc2p3nc6gkawcnwwnnh0qgvz0zmzy370di9r";
+        };
       });
     };
   };
@@ -272,11 +269,4 @@ in {
   programs.zsh.enable = true;
 
   security.sudo.wheelNeedsPassword = false;
-  security.polkit.extraConfig = ''
-    polkit.addRule(function(action, subject) {
-      if (subject.isInGroup("wheel")) {
-	return polkit.Result.YES;
-      }
-    });
-  '';
 }

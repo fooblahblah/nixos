@@ -34,25 +34,28 @@ in {
   boot.kernelPackages = linuxPackages_customWithPatches {
     configfile = /etc/nixos/linux/kernel.config;
 
-     # version = "4.6.0";
-
-     # src = pkgs.fetchurl {
-     #   url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz";
-     #   sha256 = "a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866";
-     # };
-
-     version = "4.7.0-rc6";
+     version = "4.7.4";
 
      src = pkgs.fetchurl {
-       url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.7-rc6.tar.xz";
-       sha256 = "194da8f333b71f0ae654e10d7874a079b78249425899ee7321b7ddd94d4591ce";
+       url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.7.4.tar.xz";
+       sha256 = "46a9f7e6578b6a0cd2781a2bc31edf649ffebaaa7e7ebe2303d65b9514a789fd";
      };
 
+     # version = "4.8.0-rc6";
+
+     # src = pkgs.fetchurl {
+     #   url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.8-rc6.tar.xz";
+     #   sha256 = "19d31ee86678c5acc3948d39410e2f2d7b03769cf7515316c3bd203cb2b05888";
+     # };
+
      kernelPatches = [
+       # { patch = /etc/nixos/linux/patches/nvmepatch1.patch; name = "nvmepatch1"; }
+       # { patch = /etc/nixos/linux/patches/nvmepatch2.patch; name = "nvmepatch2"; }
+       # { patch = /etc/nixos/linux/patches/nvmepatch3.patch; name = "nvmepatch3"; }
      ];
   };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1536x864@60" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1536x864@60" "pcie_aspm=force" "i915.enable_rc6=7" "i915.enable_fbc=0" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" ];
 
   boot.loader.gummiboot.enable = true;
   boot.loader.gummiboot.timeout = 5;
@@ -93,10 +96,11 @@ in {
     google-chrome
     google_talk_plugin
     gstreamer
-#    hipchat
+    hipchat
     htop
     idea.idea-ultimate
     inetutils
+    iotop
     iperf
     iptables
     kde4.kdemultimedia
@@ -135,6 +139,7 @@ in {
     ncdu
     nix-repl
     ngrok
+    nodejs
     nox
     openvpn
     openssl
@@ -149,8 +154,10 @@ in {
     phonon_backend_gstreamer
     python27Packages.pyserial
     rpm
+    ruby
     sbt
-    spotify
+    scala
+#    spotify
     sudo
     terminator
     tig
@@ -179,7 +186,7 @@ in {
   services.upower.enable = true;
   services.tlp.enable = true;
   services.tlp.extraConfig = ''
-    SATA_LINKPWR_ON_BAT=max_performance
+    DISK_DEVICES="nvme0n1p3"
   '';
   services.printing.enable = true;
   services.nixosManual.showManual = true;
@@ -262,8 +269,8 @@ in {
 
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
 	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.1.1.tar.gz";
-	  sha256 = "d5a7d2d657fe2ad170716054c6ccd164e509cf50ee6eee8b61fe3490071940df";
+	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.2.2.tar.gz";
+	  sha256 = "3fc8528cb14544180387095bc8def4da1c48391d290c1326031dc2610fc9b3fc";
 	};
       });
     };

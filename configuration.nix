@@ -24,41 +24,36 @@ in {
     ];
 
 
-  nix.binaryCaches = [ http://cache.nixos.org http://hydra.nixos.org ];
+#  nix.binaryCaches = [ http://cache.nixos.org ];
 
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-#  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelPackages = linuxPackages_customWithPatches {
     configfile = /etc/nixos/linux/kernel.config;
 
-     version = "4.7.4";
+    version = "4.9.6";
 
-     src = pkgs.fetchurl {
-       url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.7.4.tar.xz";
-       sha256 = "46a9f7e6578b6a0cd2781a2bc31edf649ffebaaa7e7ebe2303d65b9514a789fd";
-     };
+    src = pkgs.fetchurl {
+      url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.9.6.tar.xz";
+      sha256 = "f493af770a5b08a231178cbb27ab517369a81f6039625737aa8b36d69bcfce9b";
+    };
 
-     # version = "4.8.0-rc6";
-
-     # src = pkgs.fetchurl {
-     #   url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.8-rc6.tar.xz";
-     #   sha256 = "19d31ee86678c5acc3948d39410e2f2d7b03769cf7515316c3bd203cb2b05888";
-     # };
-
-     kernelPatches = [
-       # { patch = /etc/nixos/linux/patches/nvmepatch1.patch; name = "nvmepatch1"; }
-       # { patch = /etc/nixos/linux/patches/nvmepatch2.patch; name = "nvmepatch2"; }
-       # { patch = /etc/nixos/linux/patches/nvmepatch3.patch; name = "nvmepatch3"; }
-     ];
+    kernelPatches = [
+      { patch = "/etc/nixos/linux/patches/APST.patch"; name = "APST"; }
+      { patch = "/etc/nixos/linux/patches/nvme.patch"; name = "nvme"; }
+      { patch = "/etc/nixos/linux/patches/pm_qos1.patch"; name = "qos1"; }
+      { patch = "/etc/nixos/linux/patches/pm_qos2.patch"; name = "qos2";}
+      { patch = "/etc/nixos/linux/patches/pm_qos3.patch"; name = "qos3";}
+    ];
   };
 
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1536x864@60" "pcie_aspm=force" "i915.enable_rc6=7" "i915.enable_fbc=0" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" ];
+  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p4" "i915.enable_rc6=7" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" "iwlwifi.power_save=Y" ];
 
-  boot.loader.gummiboot.enable = true;
-  boot.loader.gummiboot.timeout = 5;
+  boot.loader.systemd-boot.enable = true;
+#  boot.loader.gummiboot.timeout = 5;
 
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -66,75 +61,65 @@ in {
   hardware.pulseaudio.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
-  networking.extraHosts = "127.0.0.1 nixos"; # Define your hostname.
+  networking.extraHosts = ''
+    127.0.0.1 nixos
+    192.168.0.101 raspberrypi
+  ''; # Define your hostname.
   networking.networkmanager.enable = true;
   networking.firewall.enable = false;
 
   time.timeZone = "America/Denver";
 
+  environment.pathsToLink = [ ];
+
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
+    activator
+    androidsdk
     atom
     autorandr
     bind
-#    chromium
     clementine
     cmake
     dmidecode
     docker
     dpkg
+    eclipses.eclipse-platform
     emacs
     efivar
     ethtool
+    ffmpeg
     file
     firefoxWrapper
+    gcc
+    gdb
     gimp
     git
     gnupg
     gnutls
     google-chrome
     google_talk_plugin
+    gradle
     gstreamer
-    hipchat
     htop
     idea.idea-ultimate
     inetutils
     iotop
     iperf
+#    ipfs
     iptables
-    kde4.kdemultimedia
-    kde4.kdegraphics
-    kde4.kdeutils
-    kde4.applications
-    kde4.kdebindings
-    kde4.kdeaccessibility
-    kde4.kactivities
-    kde4.kdeadmin
-    kde4.kdeartwork
-    kde4.kdenetwork
-    kde4.kdepim
-    kde4.kdepimlibs
-    kde4.kdeplasma_addons
-    kde4.kdesdk
-    kde4.kdewebdev
-    kde4.kdebase_workspace
-    kde4.kdelibs
-    kde4.kdevplatform
-    kde4.kopete
-    kde4.kmix
-    kde4.konversation
-    kde4.choqok
-    kde4.okular
-    kde4.ffmpegthumbs
-    kde4.yakuake
-    libmtp
+    kde5.kcalc
     libcanberra_kde
+    libmtp
+    libogg
+    libsysfs
     libxml2
     lshw
     lsof
     maven
     mplayer
+    nethogs
     mtpfs
     ncdu
     nix-repl
@@ -151,8 +136,8 @@ in {
     pmtools
     powertop
     psmisc
-    phonon_backend_gstreamer
-    python27Packages.pyserial
+    python3
+    python35Packages.pip
     rpm
     ruby
     sbt
@@ -166,18 +151,20 @@ in {
     unrar
     unzip
     usbutils
+    v4l_utils
+    vim
     vlc
     wget
+    wmctrl
     which
     xclip
     xflux
+    xflux-gui
     xorg.xbacklight
+    xsel
     zip
     zsh
   ];
-  ## KDE 5
-  ##++ builtins.filter stdenv.lib.isDerivation (builtins.attrValues kdeApps_stable);
-
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
@@ -203,7 +190,9 @@ in {
 
     # Enable the KDE Desktop Environment.
     displayManager.sddm.enable = true;
-    desktopManager.kde4.enable = true;
+    # desktopManager.kde4.enable = true;
+    # Only setting needed for kde5
+    desktopManager.kde5.enable = true;
 
     libinput.enable        = true;
     libinput.tapping       = false;
@@ -217,6 +206,8 @@ in {
     # synaptics.vertEdgeScroll = false;
     # synaptics.maxSpeed = "10.0";
     # synaptics.accelFactor = "0.080";
+
+#    videoDrivers = ["displaylink"];
 
     monitorSection = ''
       Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
@@ -233,10 +224,19 @@ in {
     inputClassSections = [
     ];
     resolutions = [ { x = 1536; y = 864; } ];
+    config = ''
+      Section "Monitor"
+	Modeline "3200x1800"  492.00  3200 3456 3800 4400  1800 1803 1808 1865 -hsync +vsync
+#	Option      "PreferredMode" "1280x800"
+	Identifier  "DP1"
+      EndSection
+    '';
   };
 
   services.udev = {
+    packages = [ pkgs.android-udev-rules ];
     extraRules = ''
+    ACTION=="change", KERNEL=="card0", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jsimpson/.Xauthority", RUN+="/usr/local/bin/autorandr.sh"
     '';
   };
 
@@ -248,12 +248,12 @@ in {
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" ];
     shell = "/run/current-system/sw/bin/zsh";
   };
 
   nixpkgs.config = {
-    allowBroken = false;
+    allowBroken = true;
     allowUnfree = true;
     chromium.enablePepperFlash = true;
     chromium.enablePepperPDF = true;
@@ -269,8 +269,8 @@ in {
 
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
 	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.2.2.tar.gz";
-	  sha256 = "3fc8528cb14544180387095bc8def4da1c48391d290c1326031dc2610fc9b3fc";
+	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.3.2.tar.gz";
+	  sha256 = "13pd95zad29c3i9qpwhjii601ixb4dgcld0kxk3liq4zmnv6wqxa";
 	};
       });
     };

@@ -12,12 +12,12 @@
   boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" "nvme" ];
   boot.kernelModules = [ "kvm-intel" "nvme" ];
   boot.extraModulePackages = [ ];
-  boot.blacklistedKernelModules = [ "psmouse" "btusb" ];
+  boot.blacklistedKernelModules = [ "psmouse" "btusb" "bluetooth" ];
 
   fileSystems."/" =
     { device  = "/dev/disk/by-label/nixos";
       fsType  = "btrfs";
-      options = "noatime,discard,ssd,compress=lzo,space_cache";
+      options = ["noatime" "discard" "ssd" "compress=lzo" "space_cache"];
       noCheck = true;
     };
 
@@ -27,9 +27,9 @@
     };
 
   swapDevices = [
-#   { device = "/dev/disk/by-label/swap";
-#     size = 32768; # in MB
-#   }
+   # { device = "/dev/nvme0n1p4";
+   #   size = 32768; # in MB
+   # }
   ];
 
   nix.maxJobs = 4;

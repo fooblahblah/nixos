@@ -4,20 +4,7 @@
 
 { config, pkgs, ... }:
 
-  #### Use this bit to be able to add patches to a manual build
-  let manualConfig = import ./manual-config.nix;
-
-  linuxPackages_customWithPatches = {version, src, configfile, kernelPatches}:
-    let linuxPackages_self = (pkgs.linuxPackagesFor (linuxManualConfig { inherit version src configfile kernelPatches;
-									 allowImportFromDerivation=true;})
-						     linuxPackages_self);
-			      in pkgs.recurseIntoAttrs linuxPackages_self;
-       linuxManualConfig = buildLinux;
-       buildLinux = manualConfig {
-	 inherit (pkgs) stdenv runCommand nettools bc perl kmod writeTextFile ubootChooser openssl;
-       };
-
-in {
+{
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -29,26 +16,23 @@ in {
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  boot.kernelPackages = linuxPackages_customWithPatches {
-    configfile = /etc/nixos/linux/kernel.config;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  
+  # boot.kernelPackages = linuxPackages_customWithPatches {
+  #   configfile = /etc/nixos/linux/kernel.config;
 
-    version = "4.9.6";
+  #   version = "4.10.8";
 
-    src = pkgs.fetchurl {
-      url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.9.6.tar.xz";
-      sha256 = "f493af770a5b08a231178cbb27ab517369a81f6039625737aa8b36d69bcfce9b";
-    };
+  #   src = pkgs.fetchurl {
+  #     url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.10.8.tar.xz";
+  #     sha256 = "0ab95d0b847ff40b0ac7bce7c3c8a3a07c91c82a81f1c90ea20b020dbf1d8e8b";
+  #   };
 
-    kernelPatches = [
-      { patch = "/etc/nixos/linux/patches/APST.patch"; name = "APST"; }
-      { patch = "/etc/nixos/linux/patches/nvme.patch"; name = "nvme"; }
-      { patch = "/etc/nixos/linux/patches/pm_qos1.patch"; name = "qos1"; }
-      { patch = "/etc/nixos/linux/patches/pm_qos2.patch"; name = "qos2";}
-      { patch = "/etc/nixos/linux/patches/pm_qos3.patch"; name = "qos3";}
-    ];
-  };
+  #   kernelPatches = [
+  #     { patch = "/etc/nixos/linux/patches/APST.patch"; name = "APST"; }
+  #   ];
+  # };
 
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p4" "i915.enable_rc6=7" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" "iwlwifi.power_save=Y" ];
 
@@ -76,16 +60,17 @@ in {
   environment.systemPackages = with pkgs; [
     ack
     activator
-    androidsdk
-    atom
+#    androidsdk
+#    atom
     autorandr
+#    awscli
     bind
     clementine
     cmake
+    colordiff
     dmidecode
     docker
     dpkg
-    eclipses.eclipse-platform
     emacs
     efivar
     ethtool
@@ -102,6 +87,8 @@ in {
     google_talk_plugin
     gradle
     gstreamer
+    hdparm
+#    heroku
     htop
     idea.idea-ultimate
     inetutils
@@ -109,7 +96,11 @@ in {
     iperf
 #    ipfs
     iptables
-    kde5.kcalc
+    jdk
+    kdeApplications.kcalc
+    kdeApplications.kompare
+    kdeApplications.okular
+    kdeApplications.spectacle
     libcanberra_kde
     libmtp
     libogg
@@ -124,11 +115,11 @@ in {
     ncdu
     nix-repl
     ngrok
-    nodejs
+#    nodejs-6_x
     nox
     openvpn
     openssl
-    oraclejdk8
+#    oraclejdk8
     parted
     patchelf
     pavucontrol
@@ -136,17 +127,19 @@ in {
     pmtools
     powertop
     psmisc
+    python
     python3
     python35Packages.pip
     rpm
     ruby
     sbt
     scala
-#    spotify
+    spotify
     sudo
     terminator
     tig
     tmux
+    torbrowser
     tree
     unrar
     unzip
@@ -158,6 +151,7 @@ in {
     wmctrl
     which
     xclip
+    xdotool
     xflux
     xflux-gui
     xorg.xbacklight
@@ -165,9 +159,8 @@ in {
     zip
     zsh
   ];
+  		
   # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
   services.dnsmasq.enable = true;
   services.openssh.enable = true;
   services.upower.enable = true;
@@ -192,20 +185,11 @@ in {
     displayManager.sddm.enable = true;
     # desktopManager.kde4.enable = true;
     # Only setting needed for kde5
-    desktopManager.kde5.enable = true;
+    desktopManager.plasma5.enable = true;
 
     libinput.enable        = true;
     libinput.tapping       = false;
     libinput.clickMethod   = "clickfinger";
-
-    # synaptics.enable = true;
-    # synaptics.buttonsMap = [ 1 3 2];
-    # synaptics.fingersMap = [ 0 0 0 ];
-    # synaptics.tapButtons = true;
-    # synaptics.twoFingerScroll = true;
-    # synaptics.vertEdgeScroll = false;
-    # synaptics.maxSpeed = "10.0";
-    # synaptics.accelFactor = "0.080";
 
 #    videoDrivers = ["displaylink"];
 
@@ -255,6 +239,11 @@ in {
   nixpkgs.config = {
     allowBroken = true;
     allowUnfree = true;
+
+    permittedInsecurePackages = [
+      "libplist-1.12"
+    ];
+    
     chromium.enablePepperFlash = true;
     chromium.enablePepperPDF = true;
 
@@ -264,13 +253,13 @@ in {
 #    virtualbox.enableExtensionPack = true;
 
     packageOverrides = pkgs: rec {
-      jre = pkgs.oraclejre8;
-      jdk = pkgs.oraclejdk8;
+#      jre = pkgs.oraclejre8;
+#      jdk = pkgs.oraclejdk8;
 
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
 	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2016.3.2.tar.gz";
-	  sha256 = "13pd95zad29c3i9qpwhjii601ixb4dgcld0kxk3liq4zmnv6wqxa";
+	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.1.1.tar.gz";
+	  sha256 = "18z9kv2nk8fgpns8r4ra39hs4d2v3knnwv9a996wrrbsfc9if8lp";
 	};
       });
     };

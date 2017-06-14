@@ -19,21 +19,6 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
   
-  # boot.kernelPackages = linuxPackages_customWithPatches {
-  #   configfile = /etc/nixos/linux/kernel.config;
-
-  #   version = "4.10.8";
-
-  #   src = pkgs.fetchurl {
-  #     url    = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.10.8.tar.xz";
-  #     sha256 = "0ab95d0b847ff40b0ac7bce7c3c8a3a07c91c82a81f1c90ea20b020dbf1d8e8b";
-  #   };
-
-  #   kernelPatches = [
-  #     { patch = "/etc/nixos/linux/patches/APST.patch"; name = "APST"; }
-  #   ];
-  # };
-
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p4" "i915.enable_rc6=7" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" "iwlwifi.power_save=Y" ];
 
   boot.loader.systemd-boot.enable = true;
@@ -75,6 +60,7 @@
     efivar
     ethtool
     ffmpeg
+    ffmpegthumbs
     file
     firefoxWrapper
     gcc
@@ -101,6 +87,7 @@
     kdeApplications.kompare
     kdeApplications.okular
     kdeApplications.spectacle
+    konversation
     libcanberra_kde
     libmtp
     libogg
@@ -114,12 +101,10 @@
     mtpfs
     ncdu
     nix-repl
-    ngrok
 #    nodejs-6_x
     nox
     openvpn
     openssl
-#    oraclejdk8
     parted
     patchelf
     pavucontrol
@@ -134,6 +119,7 @@
     ruby
     sbt
     scala
+    smem
     spotify
     sudo
     terminator
@@ -148,6 +134,7 @@
     vim
     vlc
     wget
+    wkhtmltopdf
     wmctrl
     which
     xclip
@@ -253,15 +240,25 @@
 #    virtualbox.enableExtensionPack = true;
 
     packageOverrides = pkgs: rec {
-#      jre = pkgs.oraclejre8;
-#      jdk = pkgs.oraclejdk8;
-
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
 	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.1.1.tar.gz";
-	  sha256 = "18z9kv2nk8fgpns8r4ra39hs4d2v3knnwv9a996wrrbsfc9if8lp";
+	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.1.4.tar.gz";
+	  sha256 = "0a93fba480pvdh6x263fm7rb9w728smgx65nbvkkbdqngjmnanyx";
 	};
       });
+
+      # Overrides kernel version
+      # linux_4_11 = pkgs.linux_4_11.override {
+      #   argsOverride = rec {
+      # 	  version       = "4.11.3";
+      # 	  modDirVersion = version;
+	  
+      # 	  src = pkgs.fetchurl {
+      # 	    url = "mirror://kernel/linux/kernel/v4.x/linux-${version}.tar.xz";
+      #       sha256 = "15xgm2hwp3liy400jgndzlf51bxhg1d6sr0qck6qvk8w5karxzav";
+      #     };
+      # 	};
+      # };
     };
   };
 

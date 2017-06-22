@@ -46,6 +46,7 @@
     ack
     activator
 #    androidsdk
+    ark  
 #    atom
     autorandr
 #    awscli
@@ -170,16 +171,13 @@
 
     # Enable the KDE Desktop Environment.
     displayManager.sddm.enable = true;
-    # desktopManager.kde4.enable = true;
     # Only setting needed for kde5
     desktopManager.plasma5.enable = true;
 
     libinput.enable        = true;
     libinput.tapping       = false;
     libinput.clickMethod   = "clickfinger";
-
-#    videoDrivers = ["displaylink"];
-
+    
     monitorSection = ''
       Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
       Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
@@ -234,8 +232,8 @@
     chromium.enablePepperFlash = true;
     chromium.enablePepperPDF = true;
 
-    firefox.enableGoogleTalkPlugin = true;
-    firefox.enableAdobeFlash = true;
+#    firefox.enableGoogleTalkPlugin = true;
+#    firefox.enableAdobeFlash = true;
 
 #    virtualbox.enableExtensionPack = true;
 
@@ -259,6 +257,14 @@
       #     };
       # 	};
       # };
+
+      # libinput = pkgs.lib.overrideDerivation pkgs.libinput (attrs: rec {
+      #   name = "libinput-1.7.2";
+      #   src = pkgs.fetchurl {
+      #     url = "http://www.freedesktop.org/software/libinput/${name}.tar.xz";
+      #     sha256 = "0b1e5a6c106ccc609ccececd9e33e6b27c8b01fc7457ddb4c1dd266e780d6bc2";
+      #   };
+      # });
     };
   };
 

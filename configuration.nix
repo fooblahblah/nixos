@@ -18,6 +18,7 @@
   boot.initrd.checkJournalingFS = false;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
+#  boot.kernelPackages = pkgs.linuxPackages_4_11;
   
   boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p4" "i915.enable_rc6=7" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" "iwlwifi.power_save=Y" ];
 
@@ -26,6 +27,7 @@
 
   boot.loader.efi.canTouchEfiVariables = true;
 
+  hardware.bluetooth.enable = false;
   hardware.enableAllFirmware = true;
   hardware.pulseaudio.enable = true;
 
@@ -44,13 +46,14 @@
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-    activator
 #    androidsdk
     ark  
 #    atom
     autorandr
 #    awscli
     bind
+    bluedevil
+    bluez
     clementine
     cmake
     colordiff
@@ -63,7 +66,7 @@
     ffmpeg
     ffmpegthumbs
     file
-    firefoxWrapper
+    #firefox
     gcc
     gdb
     gimp
@@ -84,11 +87,13 @@
 #    ipfs
     iptables
     jdk
+    jq
     kdeApplications.kcalc
     kdeApplications.kompare
     kdeApplications.okular
     kdeApplications.spectacle
     konversation
+    ktorrent
     libcanberra_kde
     libmtp
     libogg
@@ -97,6 +102,7 @@
     lshw
     lsof
     maven
+    multitail
     mplayer
     nethogs
     mtpfs
@@ -104,6 +110,7 @@
     nix-repl
 #    nodejs-6_x
     nox
+#    oraclejdk8
     openvpn
     openssl
     parted
@@ -121,12 +128,11 @@
     sbt
     scala
     smem
-    spotify
+#    spotify
     sudo
     terminator
     tig
     tmux
-    torbrowser
     tree
     unrar
     unzip
@@ -140,8 +146,6 @@
     which
     xclip
     xdotool
-    xflux
-    xflux-gui
     xorg.xbacklight
     xsel
     zip
@@ -160,7 +164,8 @@
   services.nixosManual.showManual = true;
   services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
 #  services.virtualboxHost.enable = true;
-
+  services.mongodb.enable = false;
+  
   virtualisation.docker.enable = true;
 
   # Enable the X11 windowing system.
@@ -177,7 +182,7 @@
     libinput.enable        = true;
     libinput.tapping       = false;
     libinput.clickMethod   = "clickfinger";
-    
+
     monitorSection = ''
       Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
       Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
@@ -238,13 +243,24 @@
 #    virtualbox.enableExtensionPack = true;
 
     packageOverrides = pkgs: rec {
+
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
 	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.1.4.tar.gz";
-	  sha256 = "0a93fba480pvdh6x263fm7rb9w728smgx65nbvkkbdqngjmnanyx";
+	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.2.6.tar.gz";
+	  sha256 = "1pjf6j3z8brqjx445ci70fiapdfzgbx3aiqc048lm12mp78l8psn";
 	};
       });
 
+      # mongodb = pkgs.lib.overrideDerivation pkgs.mongodb (attrs: {
+      # 	src = pkgs.fetchurl {
+      # 	  url    = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.4.10.tgz";
+      # 	  sha256 = "2644b4ad803d1a14a8c429ab86422d57646a3fe9db33c897d06614cb8fcce95c";
+      # 	};
+
+      # 	patches = [];
+      # 	postPatch = "";
+      # });
+      
       # Overrides kernel version
       # linux_4_11 = pkgs.linux_4_11.override {
       #   argsOverride = rec {

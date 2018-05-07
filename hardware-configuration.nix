@@ -12,7 +12,7 @@
   boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" "nvme" ];
   boot.kernelModules = [ "kvm-intel" "nvme" ];
   boot.extraModulePackages = [ ];
-  boot.blacklistedKernelModules = [ "psmouse" "btusb" "bluetooth" ];
+  boot.blacklistedKernelModules = [ ];
 
   fileSystems."/" =
     { device  = "/dev/disk/by-label/nixos";
@@ -27,7 +27,7 @@
     };
 
   swapDevices = [
-   # { device = "/dev/nvme0n1p4";
+   # { device = "/dev/nvme0n1p3";
    #   size = 32768; # in MB
    # }
   ];

@@ -8,8 +8,8 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+#      ./elasticsearch-6.x.nix
     ];
-
 
 #  nix.binaryCaches = [ http://cache.nixos.org ];
 
@@ -20,7 +20,7 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 #  boot.kernelPackages = pkgs.linuxPackages_4_11;
   
-  boot.kernelParams = [ "ipv6.disable=1" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p4" "i915.enable_rc6=7" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=0" "i915.enable_psr=2" "iwlwifi.power_save=Y" ];
+  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p3" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
 
   boot.loader.systemd-boot.enable = true;
 #  boot.loader.gummiboot.timeout = 5;
@@ -31,9 +31,11 @@
   hardware.enableAllFirmware = true;
   hardware.pulseaudio.enable = true;
 
-  networking.hostName = "nixos"; # Define your hostname.
+  powerManagement.enable = true;
+
+  networking.hostName = "carbon"; # Define your hostname.
   networking.extraHosts = ''
-    127.0.0.1 nixos
+    127.0.0.1 carbon
     192.168.0.101 raspberrypi
   ''; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -54,7 +56,6 @@
     bind
     bluedevil
     bluez
-    clementine
     cmake
     colordiff
     dmidecode
@@ -66,13 +67,15 @@
     ffmpeg
     ffmpegthumbs
     file
-    #firefox
+    firefox
+    firejail
     gcc
     gdb
     gimp
     git
     gnupg
     gnutls
+    go
     google-chrome
     google_talk_plugin
     gradle
@@ -99,16 +102,18 @@
     libogg
     libsysfs
     libxml2
+    linuxPackages.cpupower
     lshw
     lsof
     maven
-    multitail
+#    mongodb-tools
     mplayer
+    multitail
     nethogs
     mtpfs
     ncdu
     nix-repl
-#    nodejs-6_x
+    nodejs-8_x
     nox
 #    oraclejdk8
     openvpn
@@ -127,8 +132,10 @@
     ruby
     sbt
     scala
+    slack
     smem
 #    spotify
+    socat
     sudo
     terminator
     tig
@@ -139,6 +146,7 @@
     usbutils
     v4l_utils
     vim
+    visualvm
     vlc
     wget
     wkhtmltopdf
@@ -153,66 +161,77 @@
   ];
   		
   # List services that you want to enable:
-  services.dnsmasq.enable = true;
-  services.openssh.enable = true;
-  services.upower.enable = true;
-  services.tlp.enable = true;
-  services.tlp.extraConfig = ''
-    DISK_DEVICES="nvme0n1p3"
-  '';
-  services.printing.enable = true;
-  services.nixosManual.showManual = true;
-  services.logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-#  services.virtualboxHost.enable = true;
-  services.mongodb.enable = false;
-  
+  services = {
+    acpid.enable = true;
+    dnsmasq.enable = true;
+    openssh.enable = true;
+    upower.enable = true;
+    tlp.enable = true;
+    tlp.extraConfig = ''
+      DISK_DEVICES="nvme0n1p3"
+    '';
+    printing.enable = true;
+    nixosManual.showManual = true;
+    logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
+    #  virtualboxHost.enable = true;
+    mongodb.enable = false;
+    kibana = {
+      enable = true;
+      package = pkgs.kibana6;
+    };
+
+    elasticsearch = {
+      enable = true;
+      package = pkgs.elasticsearch6;
+#      package = ./elasticsearch-6.x;
+      extraConf = ''
+        http.max_content_length: 200mb
+        path.repo: ["/home/elasticsearch/backups"]
+      '';
+    };
+    
+    # Enable the X11 windowing system.
+    xserver = {
+      enable = true;
+
+      layout = "us";
+
+      # Enable the KDE Desktop Environment.
+      displayManager.sddm.enable = true;
+      # Only setting needed for kde5
+      desktopManager.plasma5.enable = true;
+      
+      libinput.enable              = true;
+      libinput.tapping             = false;
+      libinput.clickMethod         = "clickfinger";
+      libinput.horizontalScrolling = false;
+      
+      monitorSection = ''
+        Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
+        Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
+        Modeline "1680x1050"  146.25  1680 1784 1960 2240  1050 1053 1059 1089 -hsync +vsync
+        Modeline "1440x810"   95.00   1440 1520 1664 1888  810  813  818  841  -hsync +vsync
+        Modeline "1792x1008"  149.50  1792 1904 2088 2384  1008 1011 1016 1046 -hsync +vsync
+        Modeline "1664x936"   128.50  1664 1768 1936 2208  936  939  944  972  -hsync +vsync
+        Modeline "1536x864"   109.25  1536 1624 1784 2032  864  867  872  897  -hsync +vsync
+      '';
+      deviceSection = ''
+        Option "ModeValidation" "AllowNonEdidModes"
+      '';
+      inputClassSections = [
+      ];
+      resolutions = [ { x = 1536; y = 864; } ];
+      config = ''
+        Section "Monitor"
+	      Modeline "3200x1800"  492.00  3200 3456 3800 4400  1800 1803 1808 1865 -hsync +vsync
+        #	Option      "PreferredMode" "1280x800"
+	      Identifier  "DP1"
+        EndSection
+      '';
+    };
+  };
+
   virtualisation.docker.enable = true;
-
-  # Enable the X11 windowing system.
-  services.xserver = {
-    enable = true;
-
-    layout = "us";
-
-    # Enable the KDE Desktop Environment.
-    displayManager.sddm.enable = true;
-    # Only setting needed for kde5
-    desktopManager.plasma5.enable = true;
-
-    libinput.enable        = true;
-    libinput.tapping       = false;
-    libinput.clickMethod   = "clickfinger";
-
-    monitorSection = ''
-      Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
-      Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
-      Modeline "1680x1050"  146.25  1680 1784 1960 2240  1050 1053 1059 1089 -hsync +vsync
-      Modeline "1440x810"   95.00   1440 1520 1664 1888  810  813  818  841  -hsync +vsync
-      Modeline "1792x1008"  149.50  1792 1904 2088 2384  1008 1011 1016 1046 -hsync +vsync
-      Modeline "1664x936"   128.50  1664 1768 1936 2208  936  939  944  972  -hsync +vsync
-      Modeline "1536x864"   109.25  1536 1624 1784 2032  864  867  872  897  -hsync +vsync
-    '';
-    deviceSection = ''
-      Option "ModeValidation" "AllowNonEdidModes"
-    '';
-    inputClassSections = [
-    ];
-    resolutions = [ { x = 1536; y = 864; } ];
-    config = ''
-      Section "Monitor"
-	Modeline "3200x1800"  492.00  3200 3456 3800 4400  1800 1803 1808 1865 -hsync +vsync
-#	Option      "PreferredMode" "1280x800"
-	Identifier  "DP1"
-      EndSection
-    '';
-  };
-
-  services.udev = {
-    packages = [ pkgs.android-udev-rules ];
-    extraRules = ''
-    ACTION=="change", KERNEL=="card0", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/jsimpson/.Xauthority", RUN+="/usr/local/bin/autorandr.sh"
-    '';
-  };
 
   users.extraGroups = { adbusers = { }; };
 
@@ -244,41 +263,30 @@
 
     packageOverrides = pkgs: rec {
 
+      # Override the elasticsearch version being used
+#      elk6Version = "6.2.3";
+      
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
-	src = pkgs.fetchurl {
-	  url    = "https://download.jetbrains.com/idea/ideaIU-2017.2.6.tar.gz";
-	  sha256 = "1pjf6j3z8brqjx445ci70fiapdfzgbx3aiqc048lm12mp78l8psn";
-	};
+       	src = pkgs.fetchurl {
+	        url = "https://download.jetbrains.com/idea/ideaIU-2018.1.tar.gz";
+	        sha256 = "0n98gjm3v7qdyd1hc82zg57gyhwbamf27dyal1z71xfav4z5zb10";
+ 	      };
       });
 
-      # mongodb = pkgs.lib.overrideDerivation pkgs.mongodb (attrs: {
-      # 	src = pkgs.fetchurl {
-      # 	  url    = "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.4.10.tgz";
-      # 	  sha256 = "2644b4ad803d1a14a8c429ab86422d57646a3fe9db33c897d06614cb8fcce95c";
-      # 	};
+      slack = pkgs.lib.overrideDerivation pkgs.slack (attrs: {
+       	src = pkgs.fetchurl {
+          url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-3.1.1-amd64.deb";
+          sha256 = "0dsci2mjylzfhq89s01qfkjdy33jvpyrmlpwfcisp9g5sd3f8rm9";
+ 	      };
+      });
 
-      # 	patches = [];
-      # 	postPatch = "";
-      # });
-      
-      # Overrides kernel version
-      # linux_4_11 = pkgs.linux_4_11.override {
-      #   argsOverride = rec {
-      # 	  version       = "4.11.3";
-      # 	  modDirVersion = version;
-	  
-      # 	  src = pkgs.fetchurl {
-      # 	    url = "mirror://kernel/linux/kernel/v4.x/linux-${version}.tar.xz";
-      #       sha256 = "15xgm2hwp3liy400jgndzlf51bxhg1d6sr0qck6qvk8w5karxzav";
-      #     };
-      # 	};
-      # };
-
-      # libinput = pkgs.lib.overrideDerivation pkgs.libinput (attrs: rec {
-      #   name = "libinput-1.7.2";
+      # elasticsearch6 = pkgs.lib.overrideDerivation pkgs.elasticsearch6 (attrs: rec {
+      #   version = "6.2.4";
+      #   name = "elasticsearch-${version}";
+        
       #   src = pkgs.fetchurl {
-      #     url = "http://www.freedesktop.org/software/libinput/${name}.tar.xz";
-      #     sha256 = "0b1e5a6c106ccc609ccececd9e33e6b27c8b01fc7457ddb4c1dd266e780d6bc2";
+      #     url = "https://artifacts.elastic.co/downloads/elasticsearch/${name}.tar.gz";
+      #     sha256 = "03xwd8r0l0a29wl6wrp4bh7xr1b79q2rqfmsq3d5k35pv85sw3lw";
       #   };
       # });
     };
@@ -294,4 +302,19 @@
       }
     });
   '';
+
+  security.pam.loginLimits = [
+    {
+      domain = "*";
+      type = "soft";
+      item = "nofile";
+      value = "4096";
+    }
+    {
+      domain = "*";
+      type = "hard";
+      item = "nofile";
+      value = "10240";
+    }
+  ];
 }

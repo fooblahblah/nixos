@@ -8,10 +8,8 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-#      ./elasticsearch-6.x.nix
     ];
 
-#  nix.binaryCaches = [ http://cache.nixos.org ];
 
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
@@ -23,8 +21,6 @@
   boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p3" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
 
   boot.loader.systemd-boot.enable = true;
-#  boot.loader.gummiboot.timeout = 5;
-
   boot.loader.efi.canTouchEfiVariables = true;
 
   hardware.bluetooth.enable = false;
@@ -61,6 +57,7 @@
     dmidecode
     docker
     dpkg
+    dtrx
     emacs
     efivar
     ethtool
@@ -136,6 +133,7 @@
     smem
 #    spotify
     socat
+    stress
     sudo
     terminator
     tig
@@ -173,8 +171,13 @@
     printing.enable = true;
     nixosManual.showManual = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-    #  virtualboxHost.enable = true;
     mongodb.enable = false;
+
+    mysql = {
+      enable = true;
+      package = pkgs.mariadb;
+    };
+    
     kibana = {
       enable = true;
       package = pkgs.kibana6;
@@ -232,6 +235,8 @@
   };
 
   virtualisation.docker.enable = true;
+  virtualisation.virtualbox.host.enable = true;
+  
 
   users.extraGroups = { adbusers = { }; };
 
@@ -276,19 +281,8 @@
       slack = pkgs.lib.overrideDerivation pkgs.slack (attrs: {
        	src = pkgs.fetchurl {
           url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-3.1.1-amd64.deb";
-          sha256 = "0dsci2mjylzfhq89s01qfkjdy33jvpyrmlpwfcisp9g5sd3f8rm9";
- 	      };
+          sha256 = "0dsci2mjylzfhq89s01qfkjdy33jvpyrmlpwfcisp9g5sd3f8rm9"; 	      };
       });
-
-      # elasticsearch6 = pkgs.lib.overrideDerivation pkgs.elasticsearch6 (attrs: rec {
-      #   version = "6.2.4";
-      #   name = "elasticsearch-${version}";
-        
-      #   src = pkgs.fetchurl {
-      #     url = "https://artifacts.elastic.co/downloads/elasticsearch/${name}.tar.gz";
-      #     sha256 = "03xwd8r0l0a29wl6wrp4bh7xr1b79q2rqfmsq3d5k35pv85sw3lw";
-      #   };
-      # });
     };
   };
 

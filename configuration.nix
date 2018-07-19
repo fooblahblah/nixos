@@ -16,7 +16,6 @@
   boot.initrd.checkJournalingFS = false;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
-#  boot.kernelPackages = pkgs.linuxPackages_4_11;
   
   boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p3" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
 
@@ -186,7 +185,6 @@
     elasticsearch = {
       enable = true;
       package = pkgs.elasticsearch6;
-#      package = ./elasticsearch-6.x;
       extraConf = ''
         http.max_content_length: 200mb
         path.repo: ["/home/elasticsearch/backups"]
@@ -268,9 +266,6 @@
 
     packageOverrides = pkgs: rec {
 
-      # Override the elasticsearch version being used
-#      elk6Version = "6.2.3";
-      
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
        	src = pkgs.fetchurl {
 	        url = "https://download.jetbrains.com/idea/ideaIU-2018.1.tar.gz";

@@ -10,7 +10,6 @@
       ./hardware-configuration.nix
     ];
 
-
   # Use the gummiboot efi boot loader.
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
@@ -43,7 +42,7 @@
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-#    androidsdk
+    androidsdk
     ark  
 #    atom
     autorandr
@@ -69,6 +68,7 @@
     gdb
     gimp
     git
+    gnomeExtensions.dash-to-panel
     gnupg
     gnutls
     go
@@ -77,8 +77,9 @@
     gradle
     gstreamer
     hdparm
-#    heroku
+    #    heroku
     htop
+    icdiff
     idea.idea-ultimate
     inetutils
     iotop
@@ -89,6 +90,7 @@
     jq
     kdeApplications.kcalc
     kdeApplications.kompare
+    kdeApplications.kruler
     kdeApplications.okular
     kdeApplications.spectacle
     konversation
@@ -108,7 +110,6 @@
     nethogs
     mtpfs
     ncdu
-    nix-repl
     nodejs-8_x
     nox
 #    oraclejdk8
@@ -118,6 +119,7 @@
     patchelf
     pavucontrol
     pciutils
+    peek
     pmtools
     powertop
     psmisc
@@ -130,7 +132,7 @@
     scala
     slack
     smem
-#    spotify
+    spotify
     socat
     stress
     sudo
@@ -145,6 +147,7 @@
     vim
     visualvm
     vlc
+    vscode
     wget
     wkhtmltopdf
     wmctrl
@@ -153,6 +156,7 @@
     xdotool
     xorg.xbacklight
     xsel
+    zile
     zip
     zsh
   ];
@@ -163,6 +167,7 @@
     dnsmasq.enable = true;
     openssh.enable = true;
     upower.enable = true;
+    timesyncd.enable = true;
     tlp.enable = true;
     tlp.extraConfig = ''
       DISK_DEVICES="nvme0n1p3"
@@ -190,7 +195,12 @@
         path.repo: ["/home/elasticsearch/backups"]
       '';
     };
-    
+
+    gnome3 = {
+      seahorse.enable = true;
+      sushi.enable = true;
+    };
+      
     # Enable the X11 windowing system.
     xserver = {
       enable = true;
@@ -201,6 +211,7 @@
       displayManager.sddm.enable = true;
       # Only setting needed for kde5
       desktopManager.plasma5.enable = true;
+      desktopManager.gnome3.enable = false;
       
       libinput.enable              = true;
       libinput.tapping             = false;
@@ -233,7 +244,7 @@
   };
 
   virtualisation.docker.enable = true;
-  virtualisation.virtualbox.host.enable = true;
+#  virtualisation.virtualbox.host.enable = true;
   
 
   users.extraGroups = { adbusers = { }; };
@@ -268,15 +279,17 @@
 
       idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
        	src = pkgs.fetchurl {
-	        url = "https://download.jetbrains.com/idea/ideaIU-2018.1.tar.gz";
-	        sha256 = "0n98gjm3v7qdyd1hc82zg57gyhwbamf27dyal1z71xfav4z5zb10";
+	        url = "https://download.jetbrains.com/idea/ideaIU-2018.3.tar.gz";
+	        sha256 = "0pdbi6n42raa0pg38i9dsg44rfz4kj4wmzkr5n9xi4civdbqk8xw";
  	      };
       });
 
-      slack = pkgs.lib.overrideDerivation pkgs.slack (attrs: {
+      slack = pkgs.lib.overrideDerivation pkgs.slack (attrs: rec {
+        version = "3.3.3";
        	src = pkgs.fetchurl {
-          url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-3.1.1-amd64.deb";
-          sha256 = "0dsci2mjylzfhq89s01qfkjdy33jvpyrmlpwfcisp9g5sd3f8rm9"; 	      };
+          url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-${version}-amd64.deb";
+          sha256 = "01x4anbm62y49zfkyfvxih5rk8g2qi32ppb8j2a5pwssyw4wqbfi";
+        };
       });
     };
   };

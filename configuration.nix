@@ -2,15 +2,21 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, options, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+    ./hardware-configuration.nix
+  ];
 
-  # Use the gummiboot efi boot loader.
+  # Without any `nix.nixPath` entry:
+  # nix.nixPath =
+  #   # Prepend default nixPath values.
+  #   options.nix.nixPath.default ++ 
+  #   # Append our nixpkgs-overlays.
+  #   [ "nixpkgs-overlays=/etc/nixos/overlays-compat/" ];
+
   boot.cleanTmpDir = true;
   boot.initrd.checkJournalingFS = false;
 
@@ -42,12 +48,17 @@
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-    androidsdk
+    #    androidsdk
     ark  
-#    atom
+    unstable.atom-beta
+    autoconf
     autorandr
-#    awscli
+    awless
+    awscli
+    unstable.bazel
     bind
+    binutils-unwrapped
+#    unstable.bloop
     bluedevil
     bluez
     cmake
@@ -65,6 +76,7 @@
     firefox
     firejail
     gcc
+    gdal
     gdb
     gimp
     git
@@ -75,6 +87,8 @@
     google-chrome
     google_talk_plugin
     gradle
+#    graalvm8
+    graphviz
     gstreamer
     hdparm
     #    heroku
@@ -84,7 +98,7 @@
     inetutils
     iotop
     iperf
-#    ipfs
+    #    ipfs
     iptables
     jdk
     jq
@@ -104,15 +118,15 @@
     lshw
     lsof
     maven
-#    mongodb-tools
+    unstable.mill
     mplayer
     multitail
     nethogs
     mtpfs
     ncdu
+    ngrok
     nodejs-8_x
     nox
-#    oraclejdk8
     openvpn
     openssl
     parted
@@ -120,23 +134,30 @@
     pavucontrol
     pciutils
     peek
+    pkgconfig
     pmtools
     powertop
     psmisc
-    python
+#    python
+#    python27Packages.pip
+#    python27Packages.setuptools
     python3
-    python35Packages.pip
+    python37Packages.pip
+    python37Packages.setuptools
+    qgis
     rpm
     ruby
+    rustup
     sbt
     scala
-    slack
+    unstable.slack
     smem
     spotify
     socat
     stress
     sudo
-    terminator
+    sysstat
+    unstable.terminator
     tig
     tmux
     tree
@@ -160,7 +181,19 @@
     zip
     zsh
   ];
-  		
+
+  fonts.fonts = with pkgs; [
+    noto-fonts
+    noto-fonts-cjk
+    noto-fonts-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts
+    dina-font
+    proggyfonts
+  ];
+  
   # List services that you want to enable:
   services = {
     acpid.enable = true;
@@ -175,10 +208,15 @@
     printing.enable = true;
     nixosManual.showManual = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-    mongodb.enable = false;
-
+    flatpak.enable = true;
+    
+    postgresql = {
+      enable = false;
+      extraPlugins = [ pkgs.postgis ];
+    };
+    
     mysql = {
-      enable = true;
+      enable = false;
       package = pkgs.mariadb;
     };
     
@@ -193,14 +231,17 @@
       extraConf = ''
         http.max_content_length: 200mb
         path.repo: ["/home/elasticsearch/backups"]
+        script.painless.regex.enabled: true
+        xpack.ml.enabled: false
       '';
+      extraJavaOptions = [];
     };
 
-    gnome3 = {
-      seahorse.enable = true;
-      sushi.enable = true;
-    };
-      
+#    gnome3 = {
+#      seahorse.enable = true;
+#      sushi.enable = true;
+#    };
+    
     # Enable the X11 windowing system.
     xserver = {
       enable = true;
@@ -244,7 +285,7 @@
   };
 
   virtualisation.docker.enable = true;
-#  virtualisation.virtualbox.host.enable = true;
+  #  virtualisation.virtualbox.host.enable = true;
   
 
   users.extraGroups = { adbusers = { }; };
@@ -263,45 +304,65 @@
     allowBroken = true;
     allowUnfree = true;
 
+    oraclejdk.accept_license = true;
+    
     permittedInsecurePackages = [
       "libplist-1.12"
     ];
     
     chromium.enablePepperFlash = true;
-    chromium.enablePepperPDF = true;
 
-#    firefox.enableGoogleTalkPlugin = true;
-#    firefox.enableAdobeFlash = true;
+    #    firefox.enableGoogleTalkPlugin = true;
+    #    firefox.enableAdobeFlash = true;
 
-#    virtualbox.enableExtensionPack = true;
+    #    virtualbox.enableExtensionPack = true;
 
     packageOverrides = pkgs: rec {
-
-      idea.idea-ultimate = pkgs.lib.overrideDerivation pkgs.idea.idea-ultimate (attrs: {
-       	src = pkgs.fetchurl {
-	        url = "https://download.jetbrains.com/idea/ideaIU-2018.3.tar.gz";
-	        sha256 = "0pdbi6n42raa0pg38i9dsg44rfz4kj4wmzkr5n9xi4civdbqk8xw";
- 	      };
-      });
-
-      slack = pkgs.lib.overrideDerivation pkgs.slack (attrs: rec {
-        version = "3.3.3";
-       	src = pkgs.fetchurl {
-          url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-${version}-amd64.deb";
-          sha256 = "01x4anbm62y49zfkyfvxih5rk8g2qi32ppb8j2a5pwssyw4wqbfi";
-        };
-      });
+      unstable = import <unstable> {
+        # pass the nixpkgs config to the unstable alias
+        # to ensure `allowUnfree = true;` is propagated:
+        config = config.nixpkgs.config;
+      };
+     
+      # See overlays below for overrides...
     };
   };
 
+  nixpkgs.overlays = [
+    (self: super:
+      {
+        idea.idea-ultimate = super.idea.idea-ultimate.overrideAttrs (attrs: rec {
+          src = super.fetchurl {
+	          url = "https://download.jetbrains.com/idea/ideaIU-2019.1.3.tar.gz";
+	          sha256 = "sha256:0kg1z5kx72cyf6n7gm2n3p9ili6v5lv5hk5iwz2pigcrpmp9rhg3";
+ 	        };
+        });
+
+        bazel = super.bazel.overrideAttrs (attrs: rec {
+          version = "0.26.1";
+          name = "bazel-${version}";
+        
+       	  src = super.fetchurl {
+	          url = "https://github.com/bazelbuild/bazel/releases/download/${version}/${name}-dist.zip";
+	          sha256 = "sha256:000ny51hwnjyizm1md4w8q7m832jhf3c767pgbvg6nc7h67lzsf0";
+ 	        };
+
+          doInstallCheck = false;
+        });
+      }
+    )
+        
+#    (import /etc/nixos/overlays-compat/idea.nix)
+  ];
+  
   programs.zsh.enable = true;
 
   security.sudo.wheelNeedsPassword = false;
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
-      if (subject.isInGroup("wheel")) {
-	return polkit.Result.YES;
-      }
+    if (subject.isInGroup("wheel")) {
+	  return polkit.Result.YES;
+    }
     });
   '';
 

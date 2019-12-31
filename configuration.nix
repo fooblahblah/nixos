@@ -29,6 +29,7 @@
 
   hardware.bluetooth.enable = false;
   hardware.enableAllFirmware = true;
+  hardware.enableRedistributableFirmware = false;
   hardware.pulseaudio.enable = true;
 
   powerManagement.enable = true;
@@ -53,18 +54,23 @@
     unstable.atom-beta
     autoconf
     autorandr
+    unstable.amazon-ecs-cli
     awless
     awscli
+    #    awsebcli # Busted
     unstable.bazel
     bind
     binutils-unwrapped
 #    unstable.bloop
     bluedevil
     bluez
+    clojure
     cmake
     colordiff
+    dive
     dmidecode
     docker
+    docker-compose
     dpkg
     dtrx
     emacs
@@ -85,6 +91,8 @@
     gnutls
     go
     google-chrome
+#    google-chrome-beta
+#    google-musicmanager
     google_talk_plugin
     gradle
 #    graalvm8
@@ -93,6 +101,7 @@
     hdparm
     #    heroku
     htop
+    httperf    
     icdiff
     idea.idea-ultimate
     inetutils
@@ -109,6 +118,8 @@
     kdeApplications.spectacle
     konversation
     ktorrent
+    kubectl
+    leiningen
     libcanberra_kde
     libmtp
     libogg
@@ -125,7 +136,7 @@
     mtpfs
     ncdu
     ngrok
-    nodejs-8_x
+    nodejs-10_x
     nox
     openvpn
     openssl
@@ -144,7 +155,6 @@
     python3
     python37Packages.pip
     python37Packages.setuptools
-    qgis
     rpm
     ruby
     rustup
@@ -168,7 +178,7 @@
     vim
     visualvm
     vlc
-    vscode
+    unstable.vscode
     wget
     wkhtmltopdf
     wmctrl
@@ -209,6 +219,10 @@
     nixosManual.showManual = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
     flatpak.enable = true;
+
+    datadog-agent.apiKeyFile = "/etc/nixos/datadog_api.txt";
+    datadog-agent.enable = true;
+    datadog-agent.enableTraceAgent = true;
     
     postgresql = {
       enable = false;
@@ -221,12 +235,12 @@
     };
     
     kibana = {
-      enable = true;
+      enable = false;
       package = pkgs.kibana6;
     };
 
     elasticsearch = {
-      enable = true;
+      enable = false;
       package = pkgs.elasticsearch6;
       extraConf = ''
         http.max_content_length: 200mb
@@ -237,11 +251,6 @@
       extraJavaOptions = [];
     };
 
-#    gnome3 = {
-#      seahorse.enable = true;
-#      sushi.enable = true;
-#    };
-    
     # Enable the X11 windowing system.
     xserver = {
       enable = true;
@@ -333,13 +342,13 @@
       {
         idea.idea-ultimate = super.idea.idea-ultimate.overrideAttrs (attrs: rec {
           src = super.fetchurl {
-	          url = "https://download.jetbrains.com/idea/ideaIU-2019.1.3.tar.gz";
-	          sha256 = "sha256:0kg1z5kx72cyf6n7gm2n3p9ili6v5lv5hk5iwz2pigcrpmp9rhg3";
+	          url = "https://download.jetbrains.com/idea/ideaIU-2019.3.1.tar.gz";
+	          sha256 = "sha256:0cjmcpsfnrhs2ggv4pa0pyck08xvclwazqp1i1ygdii4qlvkam47";
  	        };
         });
 
         bazel = super.bazel.overrideAttrs (attrs: rec {
-          version = "0.26.1";
+          version = "0.28.1";
           name = "bazel-${version}";
         
        	  src = super.fetchurl {

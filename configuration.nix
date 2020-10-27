@@ -22,7 +22,8 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
   
-  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=/dev/nvme0n1p3" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
+#  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=UUID=8ef50590-430d-47af-94a8-a8ad09e6cd2c" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
+  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -58,15 +59,20 @@
     awless
     awscli
     #    awsebcli # Busted
+    bat
     unstable.bazel
     bind
     binutils-unwrapped
 #    unstable.bloop
     bluedevil
     bluez
+    unstable.chromium
+    clang
     clojure
     cmake
     colordiff
+    unstable.coursier
+#    unstable.discord
     dive
     dmidecode
     docker
@@ -90,16 +96,14 @@
     gnupg
     gnutls
     go
-    google-chrome
+#    google-chrome
 #    google-chrome-beta
 #    google-musicmanager
-    google_talk_plugin
     gradle
 #    graalvm8
     graphviz
-    gstreamer
     hdparm
-    #    heroku
+    heroku
     htop
     httperf    
     icdiff
@@ -109,11 +113,11 @@
     iperf
     #    ipfs
     iptables
-    jdk
+    jdk11
     jq
     kdeApplications.kcalc
     kdeApplications.kompare
-    kdeApplications.kruler
+#    kdeApplications.kruler
     kdeApplications.okular
     kdeApplications.spectacle
     konversation
@@ -136,7 +140,8 @@
     mtpfs
     ncdu
     ngrok
-    nodejs-10_x
+    nix-index
+    nodejs-12_x
     nox
     openvpn
     openssl
@@ -147,6 +152,7 @@
     peek
     pkgconfig
     pmtools
+    pmutils
     powertop
     psmisc
 #    python
@@ -158,7 +164,7 @@
     rpm
     ruby
     rustup
-    sbt
+    sbt-extras
     scala
     unstable.slack
     smem
@@ -187,6 +193,7 @@
     xdotool
     xorg.xbacklight
     xsel
+    yarn
     zile
     zip
     zsh
@@ -203,7 +210,7 @@
     dina-font
     proggyfonts
   ];
-  
+
   # List services that you want to enable:
   services = {
     acpid.enable = true;
@@ -216,17 +223,17 @@
       DISK_DEVICES="nvme0n1p3"
     '';
     printing.enable = true;
-    nixosManual.showManual = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
     flatpak.enable = true;
 
-    datadog-agent.apiKeyFile = "/etc/nixos/datadog_api.txt";
-    datadog-agent.enable = true;
-    datadog-agent.enableTraceAgent = true;
+#    datadog-agent.apiKeyFile = "/etc/nixos/datadog_api.txt";
+#    datadog-agent.enable = true;
+#    datadog-agent.enableTraceAgent = true;
     
     postgresql = {
-      enable = false;
-      extraPlugins = [ pkgs.postgis ];
+      enable = true;
+      package = pkgs.postgresql_11;
+#      extraPlugins = [ pkgs.postgis ];
     };
     
     mysql = {
@@ -319,9 +326,8 @@
       "libplist-1.12"
     ];
     
-    chromium.enablePepperFlash = true;
+    chromium.enablePepperFlash = false;
 
-    #    firefox.enableGoogleTalkPlugin = true;
     #    firefox.enableAdobeFlash = true;
 
     #    virtualbox.enableExtensionPack = true;
@@ -342,8 +348,8 @@
       {
         idea.idea-ultimate = super.idea.idea-ultimate.overrideAttrs (attrs: rec {
           src = super.fetchurl {
-	          url = "https://download.jetbrains.com/idea/ideaIU-2019.3.1.tar.gz";
-	          sha256 = "sha256:0cjmcpsfnrhs2ggv4pa0pyck08xvclwazqp1i1ygdii4qlvkam47";
+	          url = "https://download.jetbrains.com/idea/ideaIU-2020.2.3.tar.gz";
+	          sha256 = "sha256:0q62yzylfgv45b7brpcqdk6aah320rv00b8g090rbx0qgfj9wb6a";
  	        };
         });
 

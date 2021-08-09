@@ -9,7 +9,7 @@
     ];
 
   boot.initrd.availableKernelModules = [ "xhci_hcd" "ahci" "usbhid" "usb_storage" ];
-  boot.initrd.kernelModules = [ "base" "udev" "shutdown" "resume" "autodetect" "modconf" "block" "filesystems" "keyboard" "fsck" "nvme" ];
+  boot.initrd.kernelModules = ["nvme"];
   boot.kernelModules = [ "kvm-intel" "nvme" ];
   boot.extraModulePackages = [ ];
   boot.blacklistedKernelModules = [ ];
@@ -26,10 +26,8 @@
       fsType = "vfat";
     };
 
-  swapDevices = [
-   # { device = "/dev/nvme0n1p3";
-   #   size = 32768; # in MB
-   # }
+  swapDevices =[
+    { device = "/dev/disk/by-uuid/8ef50590-430d-47af-94a8-a8ad09e6cd2c"; }
   ];
 
   nix.maxJobs = 4;

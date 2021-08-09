@@ -50,33 +50,34 @@
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-    #    androidsdk
+    android-studio
     ark  
-    unstable.atom-beta
     autoconf
     autorandr
     unstable.amazon-ecs-cli
+#    unstable.ammonite
     awless
     awscli
     #    awsebcli # Busted
     bat
-    unstable.bazel
     bind
     binutils-unwrapped
-#    unstable.bloop
+    #    unstable.bloop
     bluedevil
     bluez
+#    bs-platform
     unstable.chromium
     clang
     clojure
     cmake
     colordiff
     unstable.coursier
+    csvkit
 #    unstable.discord
     dive
     dmidecode
-    docker
-    docker-compose
+#    docker
+#    docker-compose
     dpkg
     dtrx
     emacs
@@ -87,6 +88,7 @@
     file
     firefox
     firejail
+    fzf
     gcc
     gdal
     gdb
@@ -105,7 +107,8 @@
     hdparm
     heroku
     htop
-    httperf    
+    httperf
+    httrack
     icdiff
     idea.idea-ultimate
     inetutils
@@ -113,13 +116,14 @@
     iperf
     #    ipfs
     iptables
-    jdk11
+    #jdk
+    jetbrains.jdk
     jq
-    kdeApplications.kcalc
-    kdeApplications.kompare
-#    kdeApplications.kruler
-    kdeApplications.okular
-    kdeApplications.spectacle
+    kcalc
+    kompare
+#    kruler
+    okular
+    spectacle
     konversation
     ktorrent
     kubectl
@@ -140,8 +144,9 @@
     mtpfs
     ncdu
     ngrok
+    nix-diff
     nix-index
-    nodejs-12_x
+    nodejs-14_x
     nox
     openvpn
     openssl
@@ -151,20 +156,19 @@
     pciutils
     peek
     pkgconfig
+    plasma-browser-integration
     pmtools
     pmutils
     powertop
     psmisc
-#    python
-#    python27Packages.pip
-#    python27Packages.setuptools
     python3
     python37Packages.pip
     python37Packages.setuptools
     rpm
     ruby
     rustup
-    sbt-extras
+    (unstable.sbt.override { jre = pkgs.jdk11; })
+    #unstable.sbt
     scala
     unstable.slack
     smem
@@ -197,6 +201,7 @@
     zile
     zip
     zsh
+    unstable.zoom-us
   ];
 
   fonts.fonts = with pkgs; [
@@ -214,7 +219,7 @@
   # List services that you want to enable:
   services = {
     acpid.enable = true;
-    dnsmasq.enable = true;
+    dnsmasq.enable = false;
     openssh.enable = true;
     upower.enable = true;
     timesyncd.enable = true;
@@ -225,13 +230,10 @@
     printing.enable = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
     flatpak.enable = true;
+    fwupd.enable = true;
 
-#    datadog-agent.apiKeyFile = "/etc/nixos/datadog_api.txt";
-#    datadog-agent.enable = true;
-#    datadog-agent.enableTraceAgent = true;
-    
     postgresql = {
-      enable = true;
+      enable = false;
       package = pkgs.postgresql_11;
 #      extraPlugins = [ pkgs.postgis ];
     };
@@ -243,12 +245,12 @@
     
     kibana = {
       enable = false;
-      package = pkgs.kibana6;
+      package = pkgs.kibana7;
     };
 
     elasticsearch = {
       enable = false;
-      package = pkgs.elasticsearch6;
+      package = pkgs.elasticsearch7;
       extraConf = ''
         http.max_content_length: 200mb
         path.repo: ["/home/elasticsearch/backups"]
@@ -268,12 +270,12 @@
       displayManager.sddm.enable = true;
       # Only setting needed for kde5
       desktopManager.plasma5.enable = true;
-      desktopManager.gnome3.enable = false;
+      desktopManager.gnome.enable = false;
       
-      libinput.enable              = true;
-      libinput.tapping             = false;
-      libinput.clickMethod         = "clickfinger";
-      libinput.horizontalScrolling = false;
+      libinput.enable                       = true;
+      libinput.touchpad.tapping             = false;
+      libinput.touchpad.clickMethod         = "clickfinger";
+      libinput.touchpad.horizontalScrolling = false;
       
       monitorSection = ''
         Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
@@ -301,10 +303,11 @@
   };
 
   virtualisation.docker.enable = true;
-  #  virtualisation.virtualbox.host.enable = true;
-  
+  virtualisation.libvirtd.enable = true;
+#  virtualisation.virtualbox.host.enable = true;
+#  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
 
-  users.extraGroups = { adbusers = { }; };
+#  users.extraGroups = { adbusers = { }; };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.jsimpson = {
@@ -312,8 +315,8 @@
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" ];
-    shell = "/run/current-system/sw/bin/zsh";
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" "libvirtd" ];
+    shell = "/run/current-system/sw/bin/fish";
   };
 
   nixpkgs.config = {
@@ -326,10 +329,6 @@
       "libplist-1.12"
     ];
     
-    chromium.enablePepperFlash = false;
-
-    #    firefox.enableAdobeFlash = true;
-
     #    virtualbox.enableExtensionPack = true;
 
     packageOverrides = pkgs: rec {
@@ -348,21 +347,9 @@
       {
         idea.idea-ultimate = super.idea.idea-ultimate.overrideAttrs (attrs: rec {
           src = super.fetchurl {
-	          url = "https://download.jetbrains.com/idea/ideaIU-2020.2.3.tar.gz";
-	          sha256 = "sha256:0q62yzylfgv45b7brpcqdk6aah320rv00b8g090rbx0qgfj9wb6a";
+	          url = "https://download.jetbrains.com/idea/ideaIU-2021.1.3.tar.gz";
+	          sha256 = "sha256:1allz2p2qpcqwzh2jpjf5wjapc4dx3la06zbsf4v9p7jhvh5ggir";
  	        };
-        });
-
-        bazel = super.bazel.overrideAttrs (attrs: rec {
-          version = "0.28.1";
-          name = "bazel-${version}";
-        
-       	  src = super.fetchurl {
-	          url = "https://github.com/bazelbuild/bazel/releases/download/${version}/${name}-dist.zip";
-	          sha256 = "sha256:000ny51hwnjyizm1md4w8q7m832jhf3c767pgbvg6nc7h67lzsf0";
- 	        };
-
-          doInstallCheck = false;
         });
       }
     )
@@ -370,8 +357,10 @@
 #    (import /etc/nixos/overlays-compat/idea.nix)
   ];
   
-  programs.zsh.enable = true;
-
+  programs.zsh.enable = false;
+  programs.fish.enable = true;
+  programs.adb.enable = true;
+  
   security.sudo.wheelNeedsPassword = false;
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {

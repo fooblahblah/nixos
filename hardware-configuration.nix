@@ -30,7 +30,7 @@
     { device = "/dev/disk/by-uuid/8ef50590-430d-47af-94a8-a8ad09e6cd2c"; }
   ];
 
-  nix.maxJobs = 4;
+  nix.settings.max-jobs = 4;
   nix.extraOptions = ''
     build-cores = 4
   '';

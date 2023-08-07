@@ -17,18 +17,20 @@
   #   # Append our nixpkgs-overlays.
   #   [ "nixpkgs-overlays=/etc/nixos/overlays-compat/" ];
 
-  boot.cleanTmpDir = true;
+  system.stateVersion = "22.05";
+
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  
+  boot.tmp.cleanOnBoot = true;
   boot.initrd.checkJournalingFS = false;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  
-#  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "resume=UUID=8ef50590-430d-47af-94a8-a8ad09e6cd2c" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
-  boot.kernelParams = [ "ipv6.disable=0" "video=eDP-1:1440x810@60" "pcie_aspm=force" "iwlwifi.power_save=Y" "acpi_brightness=vendor" "i915.enable_rc6=7" "i915.enable_psr=2" "i915.enable_fbc=1" "i915.lvds_downclock=1" "i915.semaphores=1"];
+  boot.kernelParams = [ "ipv6.disable=0" ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  hardware.bluetooth.enable = false;
+  hardware.bluetooth.enable = true;
   hardware.enableAllFirmware = true;
   hardware.enableRedistributableFirmware = false;
   hardware.pulseaudio.enable = true;
@@ -38,6 +40,7 @@
   networking.hostName = "carbon"; # Define your hostname.
   networking.extraHosts = ''
     127.0.0.1 carbon
+    127.0.0.1	local.threatx.io
     192.168.0.101 raspberrypi
   ''; # Define your hostname.
   networking.networkmanager.enable = true;
@@ -50,39 +53,40 @@
   # List packages installed in system profile. To search by name, run:
   environment.systemPackages = with pkgs; [
     ack
-    android-studio
+    acpica-tools
+    #    android-studio
+    unstable.alacritty
     ark  
     autoconf
     autorandr
-    unstable.amazon-ecs-cli
-#    unstable.ammonite
-    awless
-    awscli
-    #    awsebcli # Busted
+#    unstable.amazon-ecs-cli
+    awscli2
     bat
     bind
     binutils-unwrapped
-    #    unstable.bloop
+    unstable.bitwarden
+    unstable.bitwarden-cli
     bluedevil
     bluez
-#    bs-platform
     unstable.chromium
+    cacert
     clang
-    clojure
     cmake
     colordiff
-    unstable.coursier
+#    unstable.coursier
     csvkit
-#    unstable.discord
+    #    unstable.discord
+    distrobox
     dive
     dmidecode
 #    docker
-#    docker-compose
+    docker-compose
     dpkg
     dtrx
     emacs
     efivar
     ethtool
+    exfat
     ffmpeg
     ffmpegthumbs
     file
@@ -95,89 +99,96 @@
     gimp
     git
     gnomeExtensions.dash-to-panel
+    gnumake
     gnupg
     gnutls
     go
-#    google-chrome
-#    google-chrome-beta
-#    google-musicmanager
-    gradle
-#    graalvm8
+    gparted
     graphviz
     hdparm
-    heroku
+    unstable.heroku
+    hfsprogs
     htop
     httperf
     httrack
     icdiff
-    idea.idea-ultimate
+    icu
+    unstable.jetbrains.idea-ultimate
     inetutils
     iotop
     iperf
     #    ipfs
     iptables
-    #jdk
-    jetbrains.jdk
+    jdk8
+    #    jetbrains.jdk
     jq
+    kbfs #keybase fs
     kcalc
+    keybase-gui
     kompare
 #    kruler
-    okular
-    spectacle
     konversation
     ktorrent
     kubectl
-    leiningen
+    lastpass-cli
     libcanberra_kde
     libmtp
     libogg
-    libsysfs
+#    libsForQt5.kamoso
     libxml2
     linuxPackages.cpupower
     lshw
     lsof
-    maven
-    unstable.mill
+    minikube
+    minio-client
+#    mongodb
     mplayer
     multitail
     nethogs
+    nginx
     mtpfs
     ncdu
     ngrok
+    niv
     nix-diff
     nix-index
-    nodejs-14_x
-    nox
+    #nodejs
+#    unstable.nox
+    okular
     openvpn
     openssl
+    p7zip
     parted
     patchelf
     pavucontrol
     pciutils
     peek
+    pinentry
     pkgconfig
     plasma-browser-integration
-    pmtools
     pmutils
     powertop
     psmisc
-    python3
-    python37Packages.pip
-    python37Packages.setuptools
+    python
+    rdiff-backup
     rpm
     ruby
-    rustup
-    (unstable.sbt.override { jre = pkgs.jdk11; })
-    #unstable.sbt
+    unstable.rustup
+    (unstable.sbt.override { jre = pkgs.jdk8; })
+#    unstable.sbt
     scala
+#    unstable.simplescreenrecorder
     unstable.slack
     smem
-    spotify
-    socat
+    snappy
+    socat 
+    spectacle
     stress
     sudo
+    sysfsutils
     sysstat
-    unstable.terminator
+    #    unstable.terminator
+    terminator
     tig
     tmux
     tree
@@ -190,30 +201,19 @@
     vlc
     unstable.vscode
     wget
-    wkhtmltopdf
     wmctrl
     which
     xclip
     xdotool
+    xorg.xhost
     xorg.xbacklight
     xsel
     yarn
     zile
     zip
+    zlib
     zsh
     unstable.zoom-us
-  ];
-
-  fonts.fonts = with pkgs; [
-    noto-fonts
-    noto-fonts-cjk
-    noto-fonts-emoji
-    liberation_ttf
-    fira-code
-    fira-code-symbols
-    mplus-outline-fonts
-    dina-font
-    proggyfonts
   ];
 
   # List services that you want to enable:
@@ -223,7 +223,7 @@
     openssh.enable = true;
     upower.enable = true;
     timesyncd.enable = true;
-    tlp.enable = true;
+    tlp.enable = false;
     tlp.extraConfig = ''
       DISK_DEVICES="nvme0n1p3"
     '';
@@ -231,7 +231,9 @@
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
     flatpak.enable = true;
     fwupd.enable = true;
-
+    keybase.enable = true;
+    kbfs.enable = true;
+    
     postgresql = {
       enable = false;
       package = pkgs.postgresql_11;
@@ -260,6 +262,15 @@
       extraJavaOptions = [];
     };
 
+    minio = {
+      enable = false;
+      listenAddress = ":9090";
+      accessKey = "1be2d348-c1d1-4063-9e22-291ccb282712";
+      secretKey = "47cb89be-e7dc-44ff-b240-04e00fc79acd";
+    };
+
+    mongodb.enable = false;
+    
     # Enable the X11 windowing system.
     xserver = {
       enable = true;
@@ -304,8 +315,8 @@
 
   virtualisation.docker.enable = true;
   virtualisation.libvirtd.enable = true;
-#  virtualisation.virtualbox.host.enable = true;
-#  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
+  virtualisation.virtualbox.host.enable = false;
+  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
 
 #  users.extraGroups = { adbusers = { }; };
 
@@ -327,6 +338,9 @@
     
     permittedInsecurePackages = [
       "libplist-1.12"
+      "nodejs-16.20.0"
+      "qtwebkit-5.212.0-alpha4"
+      "python-2.7.18.6"
     ];
     
     #    virtualbox.enableExtensionPack = true;
@@ -343,23 +357,35 @@
   };
 
   nixpkgs.overlays = [
-    (self: super:
-      {
-        idea.idea-ultimate = super.idea.idea-ultimate.overrideAttrs (attrs: rec {
-          src = super.fetchurl {
-	          url = "https://download.jetbrains.com/idea/ideaIU-2021.1.3.tar.gz";
-	          sha256 = "sha256:1allz2p2qpcqwzh2jpjf5wjapc4dx3la06zbsf4v9p7jhvh5ggir";
- 	        };
-        });
-      }
-    )
+    # (let
+    #   pinnedPkgs = import(pkgs.fetchFromGitHub {
+    #     owner = "NixOS";
+    #     repo = "nixpkgs";
+    #     rev = "b6bbc53029a31f788ffed9ea2d459f0bb0f0fbfc";
+    #     sha256 = "sha256-JVFoTY3rs1uDHbh0llRb1BcTNx26fGSLSiPmjojT+KY=";
+    #   }) {};
+    # in
+    # final: prev: {
+    #   docker = pinnedPkgs.docker;
+    # })
+   # (self: super:
+   #   {
+   #     jetbrains.idea-ultimate = super.jetbrains.idea-ultimate.overrideAttrs (attrs: rec {
+   #       src = super.fetchurl {
+	 #          url = "https://download.jetbrains.com/idea/ideaIU-2021.2.4.tar.gz";
+	 #          sha256 = "sha256:07ldxhlfkpdvysp00a9d7l75xlqpnf0r6d0dpwzb8wh3iyhf1jq4";
+	 #        };
+   #     });
+   #   }
+   # )
         
-#    (import /etc/nixos/overlays-compat/idea.nix)
-  ];
+   #(import /etc/nixos/overlays-compat/idea.nix)
+ ];
   
   programs.zsh.enable = false;
   programs.fish.enable = true;
   programs.adb.enable = true;
+  programs.gnupg.agent.enable = true;
   
   security.sudo.wheelNeedsPassword = false;
   security.polkit.extraConfig = ''

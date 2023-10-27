@@ -25,8 +25,11 @@
   boot.initrd.checkJournalingFS = false;
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "ipv6.disable=0" ];
-
+  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=enable" ];
+#  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=no_hwp" ]; # intel_cpufreq
+#  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=disable" ]; # acpi-cpufreq
+  boot.kernel.sysctl = { "vm.max_map_count" = 262144; };
+    
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -61,19 +64,24 @@
     autorandr
 #    unstable.amazon-ecs-cli
     awscli2
+    azure-cli
     bat
+    bazel
     bind
     binutils-unwrapped
+    birdtray # thunderbird tray support
     unstable.bitwarden
     unstable.bitwarden-cli
     bluedevil
     bluez
-    unstable.chromium
+    chromium
     cacert
     clang
     cmake
     colordiff
-#    unstable.coursier
+    cpufrequtils
+    unstable.cudaPackages.libcublas
+    unstable.cudaPackages.libcufft
     csvkit
     #    unstable.discord
     distrobox
@@ -83,7 +91,7 @@
     docker-compose
     dpkg
     dtrx
-    emacs
+    emacs-nox
     efivar
     ethtool
     exfat
@@ -103,6 +111,7 @@
     gnupg
     gnutls
     go
+    (unstable.google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.cloud-run-proxy google-cloud-sdk.components.beta  google-cloud-sdk.components.log-streaming])
     gparted
     graphviz
     hdparm
@@ -111,6 +120,7 @@
     htop
     httperf
     httrack
+    i7z
     icdiff
     icu
     unstable.jetbrains.idea-ultimate
@@ -120,28 +130,29 @@
     #    ipfs
     iptables
     jdk8
-    #    jetbrains.jdk
     jq
-    kbfs #keybase fs
+    jupyter
+#    kbfs #keybase fs
     kcalc
-    keybase-gui
+#    keybase-gui
     kompare
 #    kruler
     konversation
+    kscreen
     ktorrent
     kubectl
     lastpass-cli
     libcanberra_kde
+    cudaPackages.libcufft    
     libmtp
     libogg
-#    libsForQt5.kamoso
     libxml2
     linuxPackages.cpupower
+    lm_sensors
     lshw
     lsof
     minikube
     minio-client
-#    mongodb
     mplayer
     multitail
     nethogs
@@ -153,7 +164,8 @@
     nix-diff
     nix-index
     #nodejs
-#    unstable.nox
+    #    unstable.nox
+    numactl
     okular
     openvpn
     openssl
@@ -167,29 +179,35 @@
     pkgconfig
     plasma-browser-integration
     pmutils
+    unstable.poetry
     powertop
     psmisc
-    python
+    jetbrains.pycharm-professional
+    python311
+    #    python311Packages.jupyter-core
+    python310Packages.ipykernel
     rdiff-backup
     rpm
     ruby
     unstable.rustup
+    unstable.jetbrains.rust-rover
     (unstable.sbt.override { jre = pkgs.jdk8; })
-#    unstable.sbt
     scala
-#    unstable.simplescreenrecorder
     unstable.slack
     smem
     snappy
     socat 
     spectacle
+    sqlite
     stress
     sudo
     sysfsutils
     sysstat
-    #    unstable.terminator
     terminator
     tig
+    unstable.thermald
+    thinkfan
+    thunderbird
     tmux
     tree
     unrar
@@ -197,6 +215,7 @@
     usbutils
     v4l_utils
     vim
+    virt-manager
     visualvm
     vlc
     unstable.vscode
@@ -222,17 +241,19 @@
     dnsmasq.enable = false;
     openssh.enable = true;
     upower.enable = true;
+    thermald.enable = false;
+    thinkfan.enable = false;
     timesyncd.enable = true;
     tlp.enable = false;
-    tlp.extraConfig = ''
-      DISK_DEVICES="nvme0n1p3"
-    '';
+#    tlp.extraConfig = ''
+#      DISK_DEVICES="nvme0n1p3"
+#    '';
     printing.enable = true;
     logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
     flatpak.enable = true;
     fwupd.enable = true;
-    keybase.enable = true;
-    kbfs.enable = true;
+    keybase.enable = false;
+    kbfs.enable = false;
     
     postgresql = {
       enable = false;
@@ -315,9 +336,12 @@
 
   virtualisation.docker.enable = true;
   virtualisation.libvirtd.enable = true;
-  virtualisation.virtualbox.host.enable = false;
+  virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
-
+  virtualisation.lxd.enable = true;
+  virtualisation.lxc.lxcfs.enable = true;
+  virtualisation.waydroid.enable = false;
+  
 #  users.extraGroups = { adbusers = { }; };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -326,7 +350,7 @@
     uid = 1000;
     home = "/home/jsimpson";
     createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" "libvirtd" ];
+    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" "libvirtd" "lxd" ];
     shell = "/run/current-system/sw/bin/fish";
   };
 
@@ -338,7 +362,7 @@
     
     permittedInsecurePackages = [
       "libplist-1.12"
-      "nodejs-16.20.0"
+      "nodejs-16.20.2"
       "qtwebkit-5.212.0-alpha4"
       "python-2.7.18.6"
     ];

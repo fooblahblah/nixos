@@ -2,436 +2,157 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, options, ... }:
+{ config, pkgs, ... }:
 
+let
+  unstable = import <unstable> { config = { allowUnfree = true; }; };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
-    ./hardware-configuration.nix
-  ];
+      ./hardware-configuration.nix
+    ];
 
-  # Without any `nix.nixPath` entry:
-  # nix.nixPath =
-  #   # Prepend default nixPath values.
-  #   options.nix.nixPath.default ++ 
-  #   # Append our nixpkgs-overlays.
-  #   [ "nixpkgs-overlays=/etc/nixos/overlays-compat/" ];
-
-  system.stateVersion = "22.05";
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  
-  boot.tmp.cleanOnBoot = true;
-  boot.initrd.checkJournalingFS = false;
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=enable" ];
-#  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=no_hwp" ]; # intel_cpufreq
-#  boot.kernelParams = [ "ipv6.disable=0" "intel_pstate=disable" ]; # acpi-cpufreq
-  boot.kernel.sysctl = { "vm.max_map_count" = 262144; };
-    
+  # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  hardware.bluetooth.enable = true;
-  hardware.enableAllFirmware = true;
-  hardware.enableRedistributableFirmware = false;
-  hardware.pulseaudio.enable = true;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  powerManagement.enable = true;
+  networking.hostName = "nixos"; # Define your hostname.
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  networking.hostName = "carbon"; # Define your hostname.
-  networking.extraHosts = ''
-    127.0.0.1 carbon
-    127.0.0.1	local.threatx.io
-    192.168.0.101 raspberrypi
-  ''; # Define your hostname.
+  # Enable networking
   networking.networkmanager.enable = true;
-  networking.firewall.enable = false;
 
+  # Set your time zone.
   time.timeZone = "America/Denver";
 
-  environment.pathsToLink = [ ];
+  # Select internationalisation properties.
+  i18n.defaultLocale = "en_US.UTF-8";
 
-  # List packages installed in system profile. To search by name, run:
-  environment.systemPackages = with pkgs; [
-    ack
-    acpica-tools
-    #    android-studio
-    unstable.alacritty
-    ark  
-    autoconf
-    autorandr
-#    unstable.amazon-ecs-cli
-    awscli2
-    azure-cli
-    bat
-    bazel
-    bind
-    binutils-unwrapped
-    birdtray # thunderbird tray support
-    unstable.bitwarden
-    unstable.bitwarden-cli
-    bluedevil
-    bluez
-    chromium
-    cacert
-    clang
-    cmake
-    colordiff
-    cpufrequtils
-    unstable.cudaPackages.libcublas
-    unstable.cudaPackages.libcufft
-    csvkit
-    #    unstable.discord
-    distrobox
-    dive
-    dmidecode
-#    docker
-    docker-compose
-    dpkg
-    dtrx
-    emacs-nox
-    efivar
-    ethtool
-    exfat
-    ffmpeg
-    ffmpegthumbs
-    file
-    firefox
-    firejail
-    fzf
-    gcc
-    gdal
-    gdb
-    gimp
-    git
-    gnomeExtensions.dash-to-panel
-    gnumake
-    gnupg
-    gnutls
-    go
-    (unstable.google-cloud-sdk.withExtraComponents [google-cloud-sdk.components.cloud-run-proxy google-cloud-sdk.components.beta  google-cloud-sdk.components.log-streaming])
-    gparted
-    graphviz
-    hdparm
-    unstable.heroku
-    hfsprogs
-    htop
-    httperf
-    httrack
-    i7z
-    icdiff
-    icu
-    unstable.jetbrains.idea-ultimate
-    inetutils
-    iotop
-    iperf
-    #    ipfs
-    iptables
-    jdk8
-    jq
-    jupyter
-#    kbfs #keybase fs
-    kcalc
-#    keybase-gui
-    kompare
-#    kruler
-    konversation
-    kscreen
-    ktorrent
-    kubectl
-    lastpass-cli
-    libcanberra_kde
-    cudaPackages.libcufft    
-    libmtp
-    libogg
-    libxml2
-    linuxPackages.cpupower
-    lm_sensors
-    lshw
-    lsof
-    minikube
-    minio-client
-    mplayer
-    multitail
-    nethogs
-    nginx
-    mtpfs
-    ncdu
-    ngrok
-    niv
-    nix-diff
-    nix-index
-    #nodejs
-    #    unstable.nox
-    numactl
-    okular
-    openvpn
-    openssl
-    p7zip
-    parted
-    patchelf
-    pavucontrol
-    pciutils
-    peek
-    pinentry
-    pkgconfig
-    plasma-browser-integration
-    pmutils
-    unstable.poetry
-    powertop
-    psmisc
-    jetbrains.pycharm-professional
-    python311
-    #    python311Packages.jupyter-core
-    python310Packages.ipykernel
-    rdiff-backup
-    rpm
-    ruby
-    unstable.rustup
-    unstable.jetbrains.rust-rover
-    (unstable.sbt.override { jre = pkgs.jdk8; })
-    scala
-    unstable.slack
-    smem
-    snappy
-    socat 
-    spectacle
-    sqlite
-    stress
-    sudo
-    sysfsutils
-    sysstat
-    terminator
-    tig
-    unstable.thermald
-    thinkfan
-    thunderbird
-    tmux
-    tree
-    unrar
-    unzip
-    usbutils
-    v4l_utils
-    vim
-    virt-manager
-    visualvm
-    vlc
-    unstable.vscode
-    wget
-    wmctrl
-    which
-    xclip
-    xdotool
-    xorg.xhost
-    xorg.xbacklight
-    xsel
-    yarn
-    zile
-    zip
-    zlib
-    zsh
-    unstable.zoom-us
-  ];
-
-  # List services that you want to enable:
-  services = {
-    acpid.enable = true;
-    dnsmasq.enable = false;
-    openssh.enable = true;
-    upower.enable = true;
-    thermald.enable = false;
-    thinkfan.enable = false;
-    timesyncd.enable = true;
-    tlp.enable = false;
-#    tlp.extraConfig = ''
-#      DISK_DEVICES="nvme0n1p3"
-#    '';
-    printing.enable = true;
-    logind.extraConfig = "HandleLidSwitch=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nLidSwitchIgnoreInhibited=no";
-    flatpak.enable = true;
-    fwupd.enable = true;
-    keybase.enable = false;
-    kbfs.enable = false;
-    
-    postgresql = {
-      enable = false;
-      package = pkgs.postgresql_11;
-#      extraPlugins = [ pkgs.postgis ];
-    };
-    
-    mysql = {
-      enable = false;
-      package = pkgs.mariadb;
-    };
-    
-    kibana = {
-      enable = false;
-      package = pkgs.kibana7;
-    };
-
-    elasticsearch = {
-      enable = false;
-      package = pkgs.elasticsearch7;
-      extraConf = ''
-        http.max_content_length: 200mb
-        path.repo: ["/home/elasticsearch/backups"]
-        script.painless.regex.enabled: true
-        xpack.ml.enabled: false
-      '';
-      extraJavaOptions = [];
-    };
-
-    minio = {
-      enable = false;
-      listenAddress = ":9090";
-      accessKey = "1be2d348-c1d1-4063-9e22-291ccb282712";
-      secretKey = "47cb89be-e7dc-44ff-b240-04e00fc79acd";
-    };
-
-    mongodb.enable = false;
-    
-    # Enable the X11 windowing system.
-    xserver = {
-      enable = true;
-
-      layout = "us";
-
-      # Enable the KDE Desktop Environment.
-      displayManager.sddm.enable = true;
-      # Only setting needed for kde5
-      desktopManager.plasma5.enable = true;
-      desktopManager.gnome.enable = false;
-      
-      libinput.enable                       = true;
-      libinput.touchpad.tapping             = false;
-      libinput.touchpad.clickMethod         = "clickfinger";
-      libinput.touchpad.horizontalScrolling = false;
-      
-      monitorSection = ''
-        Modeline "2560x1600"  348.50  2560 2760 3032 3504  1600 1603 1609 1658 -hsync +vsync
-        Modeline "1920x1200"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
-        Modeline "1680x1050"  146.25  1680 1784 1960 2240  1050 1053 1059 1089 -hsync +vsync
-        Modeline "1440x810"   95.00   1440 1520 1664 1888  810  813  818  841  -hsync +vsync
-        Modeline "1792x1008"  149.50  1792 1904 2088 2384  1008 1011 1016 1046 -hsync +vsync
-        Modeline "1664x936"   128.50  1664 1768 1936 2208  936  939  944  972  -hsync +vsync
-        Modeline "1536x864"   109.25  1536 1624 1784 2032  864  867  872  897  -hsync +vsync
-      '';
-      deviceSection = ''
-        Option "ModeValidation" "AllowNonEdidModes"
-      '';
-      inputClassSections = [
-      ];
-      resolutions = [ { x = 1536; y = 864; } ];
-      config = ''
-        Section "Monitor"
-	      Modeline "3200x1800"  492.00  3200 3456 3800 4400  1800 1803 1808 1865 -hsync +vsync
-        #	Option      "PreferredMode" "1280x800"
-	      Identifier  "DP1"
-        EndSection
-      '';
-    };
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
   };
 
-  virtualisation.docker.enable = true;
-  virtualisation.libvirtd.enable = true;
-  virtualisation.virtualbox.host.enable = true;
-  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
-  virtualisation.lxd.enable = true;
-  virtualisation.lxc.lxcfs.enable = true;
-  virtualisation.waydroid.enable = false;
+  # Enable the X11 windowing system.
+  # You can disable this if you're only using the Wayland session.
+  services.xserver.enable = true;
+
+  # Enable the KDE Plasma Desktop Environment.
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
+
+  # Configure keymap in X11
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  hardware.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
   
-#  users.extraGroups = { adbusers = { }; };
+  virtualisation.docker.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.extraUsers.jsimpson = {
+  users.users.jsimpson = {
     isNormalUser = true;
-    uid = 1000;
-    home = "/home/jsimpson";
-    createHome = true;
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "adbusers" "dialout" "vboxusers" "docker" "kvm" "libvirtd" "lxd" ];
-    shell = "/run/current-system/sw/bin/fish";
-  };
-
-  nixpkgs.config = {
-    allowBroken = true;
-    allowUnfree = true;
-
-    oraclejdk.accept_license = true;
-    
-    permittedInsecurePackages = [
-      "libplist-1.12"
-      "nodejs-16.20.2"
-      "qtwebkit-5.212.0-alpha4"
-      "python-2.7.18.6"
+    description = "Jeff Simpson";
+    extraGroups = [ "docker" "networkmanager" "wheel" ];
+    packages = with pkgs; [
+      kdePackages.kate
+    #  thunderbird
     ];
-    
-    #    virtualbox.enableExtensionPack = true;
-
-    packageOverrides = pkgs: rec {
-      unstable = import <unstable> {
-        # pass the nixpkgs config to the unstable alias
-        # to ensure `allowUnfree = true;` is propagated:
-        config = config.nixpkgs.config;
-      };
-     
-      # See overlays below for overrides...
-    };
+    shell = pkgs.fish;
+    useDefaultShell = true;    
   };
 
-  nixpkgs.overlays = [
-    # (let
-    #   pinnedPkgs = import(pkgs.fetchFromGitHub {
-    #     owner = "NixOS";
-    #     repo = "nixpkgs";
-    #     rev = "b6bbc53029a31f788ffed9ea2d459f0bb0f0fbfc";
-    #     sha256 = "sha256-JVFoTY3rs1uDHbh0llRb1BcTNx26fGSLSiPmjojT+KY=";
-    #   }) {};
-    # in
-    # final: prev: {
-    #   docker = pinnedPkgs.docker;
-    # })
-   # (self: super:
-   #   {
-   #     jetbrains.idea-ultimate = super.jetbrains.idea-ultimate.overrideAttrs (attrs: rec {
-   #       src = super.fetchurl {
-	 #          url = "https://download.jetbrains.com/idea/ideaIU-2021.2.4.tar.gz";
-	 #          sha256 = "sha256:07ldxhlfkpdvysp00a9d7l75xlqpnf0r6d0dpwzb8wh3iyhf1jq4";
-	 #        };
-   #     });
-   #   }
-   # )
-        
-   #(import /etc/nixos/overlays-compat/idea.nix)
- ];
-  
-  programs.zsh.enable = false;
-  programs.fish.enable = true;
-  programs.adb.enable = true;
-  programs.gnupg.agent.enable = true;
-  
-  security.sudo.wheelNeedsPassword = false;
-  security.polkit.extraConfig = ''
-    polkit.addRule(function(action, subject) {
-    if (subject.isInGroup("wheel")) {
-	  return polkit.Result.YES;
-    }
-    });
-  '';
+  programs.direnv.enable = true;
 
-  security.pam.loginLimits = [
-    {
-      domain = "*";
-      type = "soft";
-      item = "nofile";
-      value = "4096";
-    }
-    {
-      domain = "*";
-      type = "hard";
-      item = "nofile";
-      value = "10240";
-    }
+  programs.fish.enable = true;
+
+  # Install firefox.
+  programs.firefox.enable = true;
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+
+  environment.systemPackages = with pkgs; [
+    bat
+    btop
+    chromium
+    unstable.code-cursor
+    devbox
+    emacs-nox
+    fzf
+    git
+    jq
+    kitty
+    lshw
+    openssl
+    rustup
+    slack
+    tig
+    vscode
+    xdotool
+    wget
+    zoom-us
   ];
+
+  security.sudo = {
+    enable = true;
+    extraRules = [
+      {
+        groups = [ "wheel" ];
+        commands = [ { command = "ALL"; options = [ "NOPASSWD" ]; } ];
+      }
+    ];
+  };
+
+
+  # List services that you want to enable:
+
+  # Enable the OpenSSH daemon.
+  services.openssh.enable = true;
+
+  # Open ports in the firewall.
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # networking.firewall.enable = false;
+
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "24.11"; # Did you read the comment?
 }
